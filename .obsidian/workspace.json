@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "docs/02-design/01-prototypes/v1/20260820-004-user-request-form-prototype.md",
+                "file": "docs/03-testing/01-test-plan/20260820-001-saleng-pickup-request-user-flow-test-plan.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "20260820-004-user-request-form-prototype"
+              "title": "20260820-001-saleng-pickup-request-user-flow-test-plan"
             }
           }
         ]
@@ -190,6 +190,8 @@
   },
   "active": "cbdab8c7ca0a8bd1",
   "lastOpenFiles": [
+    "test-plan.pdf",
+    "docs/02-design/01-prototypes/v1/20260820-004-user-request-form-prototype.md",
     "docs/05-log/20260820-log.md.tmp.18532.c5b607556af4",
     "docs/03-testing/01-test-plan/20260820-001-saleng-pickup-request-user-flow-test-plan.md",
     "docs/03-testing/01-test-plan/20260820-001-saleng-pickup-request-user-flow-test-plan.md.tmp.18532.6390b5c6aa4b",
@@ -207,7 +209,6 @@
     "docs/02-design/01-prototypes/v1/index.md.tmp.18532.e9f6605cc727",
     "docs/02-design/01-prototypes/v1/index.md.tmp.18532.e34a5770e5ef",
     "docs/02-design/01-prototypes/v1/20260820-020-admin-price-management-prototype.md",
-    "docs/02-design/01-prototypes/v1/20260820-020-admin-price-management-prototype.md.tmp.18532.49376c59efa4",
     "docs/02-design/01-prototypes/v1/20260820-019-admin-saleng-management-prototype.md",
     "docs/02-design/01-prototypes/v1/20260820-018-admin-request-detail-prototype.md",
     "docs/02-design/01-prototypes/v1/20260820-017-admin-request-list-prototype.md",
@@ -224,7 +225,6 @@
     "docs/02-design/01-prototypes/v1/20260820-007-user-price-list-prototype.md",
     "docs/02-design/01-prototypes/v1/20260820-006-user-tracking-list-prototype.md",
     "docs/02-design/01-prototypes/v1/20260820-005-user-pickup-status-prototype.md",
-    "docs/02-design/01-prototypes/v1/20260820-004-user-request-form-prototype.md",
     "docs/02-design/01-prototypes/v1/20260820-003-user-address-service-area-prototype.md"
   ]
 }
