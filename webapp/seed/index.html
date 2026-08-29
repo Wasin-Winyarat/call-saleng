@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>สร้างข้อมูลตัวอย่าง — user_account + pickup_request</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --color-primary-600: #2F7A4D;
+    --color-neutral-bg: #FAF9F6;
+    --color-neutral-card: #FFFFFF;
+    --color-neutral-300: #E5E4DF;
+    --color-text-primary: #2B2E2C;
+    --color-text-secondary: #7A7F7A;
+    --color-danger: #D97757;
+    --radius-md: 16px;
+    --radius-lg: 22px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--color-neutral-bg); color: var(--color-text-primary);
+    font-family: 'Noto Sans Thai', system-ui, sans-serif; line-height: 1.5;
+  }
+  .page { max-width: 640px; margin: 0 auto; padding: 28px 20px 64px; }
+  h1 { font-size: 22px; margin: 0 0 6px; }
+  .text-secondary { color: var(--color-text-secondary); font-size: 14px; margin-bottom: 20px; }
+  .card { background: var(--color-neutral-card); border-radius: var(--radius-md); padding: 20px; margin-bottom: 16px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--color-neutral-300); }
+  .btn {
+    width: 100%; min-height: 48px; border-radius: var(--radius-lg); border: none;
+    background: var(--color-primary-600); color: #fff; font-size: 16px; font-weight: 700;
+    cursor: pointer; font-family: inherit;
+  }
+  .btn:disabled { background: var(--color-neutral-300); color: var(--color-text-secondary); cursor: not-allowed; }
+  .log { font-family: monospace; font-size: 13px; white-space: pre-wrap; background: var(--color-neutral-bg);
+    border-radius: var(--radius-md); padding: 12px; margin-top: 14px; min-height: 40px; }
+  .log .ok { color: var(--color-primary-600); }
+  .log .err { color: var(--color-danger); }
+  a { color: var(--color-primary-600); }
+</style>
+</head>
+<!--
+  ES module ต้องรันผ่าน local server เท่านั้น (เปิด file:// ตรงๆ จะโดน CORS บล็อก):
+    powershell -File ../serve.ps1
+  แล้วเปิด http://localhost:8080/seed/
+-->
+<body>
+<div class="page">
+  <h1>สร้างข้อมูลตัวอย่าง</h1>
+  <div class="text-secondary">
+    Seed 5 บัญชี <code>user_account</code> + คำขอ <code>pickup_request</code> ที่ผูก <code>user_id</code> กับแต่ละบัญชี (คนละสถานะ เพื่อสาธิต status enum เต็มรูปแบบ) —
+    ใช้ doc id คงที่ (<code>demo-user-1..5</code> / <code>demo-request-1..5</code>) กดซ้ำได้ ไม่สร้างซ้ำซ้อน
+  </div>
+
+  <div class="card">
+    <div style="font-weight:700; margin-bottom:10px;">บัญชี user ที่จะสร้าง</div>
+    <table>
+      <tr><th>id</th><th>ชื่อ</th><th>เบอร์โทร</th><th>สถานะ</th></tr>
+      <tr><td>demo-user-1</td><td>สมหญิง ใจงาม</td><td>089-123-4567</td><td>active</td></tr>
+      <tr><td>demo-user-2</td><td>วิชัย รักธรรม</td><td>082-345-6789</td><td>active</td></tr>
+      <tr><td>demo-user-3</td><td>อรุณี พูลสวัสดิ์</td><td>089-876-5432</td><td>active</td></tr>
+      <tr><td>demo-user-4</td><td>ประยุทธ ศรีสุข</td><td>086-555-1234</td><td>active</td></tr>
+      <tr><td>demo-user-5</td><td>กนกวรรณ แซ่ตั้ง</td><td>091-222-3344</td><td>suspended</td></tr>
+    </table>
+    <div class="text-secondary" style="margin-top:10px;">
+      demo-user-5 ตั้งเป็น <code>suspended</code> โดยตั้งใจ เพื่อสาธิต business rule "บัญชี suspended สร้างคำขอใหม่ไม่ได้" —
+      หน้าฟอร์มคำขอจะไม่แสดง user นี้เป็นตัวเลือก
+    </div>
+  </div>
+
+  <button class="btn" id="seedBtn">สร้าง/อัปเดตข้อมูลตัวอย่าง</button>
+  <div class="log" id="log">ยังไม่ได้กด — กดปุ่มด้านบนเพื่อเริ่ม</div>
+
+  <div class="text-secondary" style="margin-top:20px;">
+    เสร็จแล้วไปทดสอบต่อได้ที่ <a href="../pickup-request/">หน้าฟอร์มคำขอ</a>
+  </div>
+</div>
+
+<script type="module" src="seed.js"></script>
+</body>
+</html>
