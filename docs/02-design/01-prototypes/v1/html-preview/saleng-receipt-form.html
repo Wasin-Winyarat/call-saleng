@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>Saleng — ฟอร์มส่งใบเสร็จ</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="page-label">16 · <b>Saleng — ฟอร์มส่งใบเสร็จ</b> · <a href="index.html">← กลับหน้ารวม</a></div>
+
+<div class="phone-frame">
+  <div class="phone-screen">
+    <div class="screen-scroll">
+
+      <div class="header-back">
+        <div class="back-chevron" onclick="location.href='saleng-job-current-status.html'">←</div>
+        <div>
+          <div class="header-back-title">ส่งใบเสร็จ</div>
+          <div class="header-back-subtitle">คำขอ #SL-2607</div>
+        </div>
+      </div>
+
+      <div class="section-header">
+        <div class="h2">รายการขยะ</div>
+        <a class="link" href="#" onclick="addLine(); return false;">+ เพิ่มรายการ</a>
+      </div>
+
+      <div id="lineItems"></div>
+
+      <a class="link body-sm" href="#" onclick="addLine(); return false;">+ เพิ่มรายการ</a>
+
+      <div class="summary-divider"></div>
+      <div class="summary-row"><span>รวมมูลค่าขยะ</span><span id="subtotal">0 บาท</span></div>
+      <div class="summary-row"><span>ค่าธรรมเนียมบริการ (20 บาท/คำขอ)</span><span class="text-danger">-20 บาท</span></div>
+      <div class="summary-row total"><span>ยอดที่ user จะได้รับ</span><span class="text-success" id="total">0 บาท</span></div>
+      <div class="caption" style="margin:8px 0 24px;">ค่าธรรมเนียม 20 บาทนี้หักจากยอดที่ user ได้รับ ไม่ใช่หักเพิ่มจากคุณ — คุณต้อง settle ค่าธรรมเนียมนี้กับ platform ตามช่องทางที่เลือกด้านล่าง</div>
+
+      <div class="h2" style="margin-bottom:12px;">ช่องทางชำระค่าธรรมเนียม</div>
+
+      <div class="choice-card" onclick="selectChannel('wallet')" id="chWallet">
+        <div class="choice-card-icon">👛</div>
+        <div class="choice-card-body">
+          <div class="choice-card-title">หักจาก Wallet</div>
+          <div class="choice-card-meta">ยอดคงเหลือ: 35 บาท</div>
+        </div>
+        <div class="choice-card-check">✓</div>
+      </div>
+
+      <div class="choice-card" onclick="selectChannel('transfer')" id="chTransfer">
+        <div class="choice-card-icon">🏦</div>
+        <div class="choice-card-body">
+          <div class="choice-card-title">โอนเงินเอง</div>
+          <div class="choice-card-meta">แนบสลิปโอนเงิน</div>
+        </div>
+        <div class="choice-card-check">✓</div>
+      </div>
+      <div id="transferSub" style="display:none; margin:-4px 0 10px 44px;">
+        <div class="photo-thumb" style="margin-bottom:8px;">📎<br></div>
+        <input type="text" placeholder="เลขอ้างอิงการโอน (ไม่บังคับ)" style="width:100%; padding:10px; border-radius:12px; border:1.5px solid var(--color-neutral-300); font-family:inherit;">
+      </div>
+
+      <div class="choice-card" onclick="selectChannel('cash')" id="chCash">
+        <div class="choice-card-icon">🏪</div>
+        <div class="choice-card-body">
+          <div class="choice-card-title">หักเงินสดหน้าร้านเครือข่าย</div>
+          <div class="choice-card-meta">ชำระตอนนำขยะไปขายต่อที่ร้านในเครือข่าย platform</div>
+        </div>
+        <div class="choice-card-check">✓</div>
+      </div>
+
+    </div>
+
+    <div class="sticky-footer">
+      <button class="btn btn-primary" id="submitBtn" disabled onclick="submitReceipt()">ส่งใบเสร็จ</button>
+    </div>
+
+    <div class="modal-overlay" id="doneModal">
+      <div class="modal-box" style="text-align:center;">
+        <div style="font-size:32px; margin-bottom:8px;">🎉</div>
+        <div class="modal-title">ปิดงานสำเร็จ</div>
+        <div class="modal-desc">ยอดสุทธิที่ user ได้รับ: <b id="doneTotal">0 บาท</b></div>
+        <div class="modal-actions">
+          <button class="btn btn-primary" onclick="location.href='saleng-job-list.html'">กลับหน้าแรก</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const WASTE_TYPES = ['กระดาษ','พลาสติก','เหล็ก','อลูมิเนียม','ขวดแก้ว','อื่นๆ ระบุเอง'];
+let lineCount = 0;
+let selectedChannel = null;
+
+function addLine() {
+  lineCount++;
+  const id = 'line' + lineCount;
+  const wrap = document.createElement('div');
+  wrap.className = 'line-item';
+  wrap.id = id;
+  wrap.innerHTML = `
+    <div class="line-item-row">
+      <div class="line-item-fields">
+        <select onchange="recalc()">
+          <option value="">เลือกประเภทขยะ</option>
+          ${WASTE_TYPES.map(t=>`<option>${t}</option>`).join('')}
+        </select>
+        <div class="two-col">
+          <input type="number" placeholder="น้ำหนัก (กก.)" min="0" step="0.1" onchange="recalc()">
+          <input type="number" placeholder="ราคารวม (บาท)" min="0" class="price-input" onchange="recalc()">
+        </div>
+        <div class="hint">กรอกราคาที่ตกลงกับ user จริง</div>
+      </div>
+      <button class="line-item-remove" onclick="removeLine('${id}')">🗑️</button>
+    </div>
+  `;
+  document.getElementById('lineItems').appendChild(wrap);
+  toggleRemoveButtons();
+  recalc();
+}
+
+function removeLine(id) {
+  const el = document.getElementById(id);
+  if (el) el.remove();
+  toggleRemoveButtons();
+  recalc();
+}
+
+function toggleRemoveButtons() {
+  const items = document.querySelectorAll('.line-item');
+  items.forEach(item => {
+    item.querySelector('.line-item-remove').style.display = items.length > 1 ? 'block' : 'none';
+  });
+}
+
+function selectChannel(ch) {
+  selectedChannel = ch;
+  ['wallet','transfer','cash'].forEach(c => {
+    document.getElementById('ch' + c.charAt(0).toUpperCase() + c.slice(1)).classList.toggle('selected', c === ch);
+  });
+  document.getElementById('transferSub').style.display = ch === 'transfer' ? 'block' : 'none';
+  recalc();
+}
+
+function recalc() {
+  let subtotal = 0;
+  document.querySelectorAll('.price-input').forEach(inp => { subtotal += Number(inp.value) || 0; });
+  const total = Math.max(subtotal - 20, 0);
+  document.getElementById('subtotal').textContent = subtotal.toLocaleString() + ' บาท';
+  document.getElementById('total').textContent = total.toLocaleString() + ' บาท';
+
+  const hasValidLine = Array.from(document.querySelectorAll('.line-item')).some(item => {
+    const sel = item.querySelector('select').value;
+    const w = item.querySelectorAll('input[type=number]')[0].value;
+    const p = item.querySelectorAll('input[type=number]')[1].value;
+    return sel && w && p;
+  });
+  document.getElementById('submitBtn').disabled = !(hasValidLine && selectedChannel);
+}
+
+function submitReceipt() {
+  document.getElementById('doneTotal').textContent = document.getElementById('total').textContent;
+  document.getElementById('doneModal').classList.add('open');
+}
+
+addLine();
+</script>
+</body>
+</html>

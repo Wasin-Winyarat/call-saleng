@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>Green Saleng — HTML Prototype Preview</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="index-wrap">
+  <h1 class="h1" style="margin-bottom:6px;">Green Saleng — HTML Prototype Preview</h1>
+  <p class="text-secondary" style="margin-bottom:28px;">
+    แปลงจาก wireframe spec (Markdown) ใน <code>v1/</code> เป็นหน้า HTML คลิกดูได้จริงในเบราว์เซอร์ — ใช้เป็น reference ประกอบการออกแบบ database (fields ที่แต่ละหน้าต้องเก็บ/แสดง) ไม่ใช่ production UI
+  </p>
+
+  <h2 class="h2" style="margin-bottom:14px;">Saleng (คนขับรถซาเล้ง) — flow เข้ารับซื้อขยะ</h2>
+  <div class="index-grid" style="margin-bottom:36px;">
+    <a class="index-card" href="saleng-login-otp.html">
+      <div class="num">#11</div>
+      <div class="title">เข้าสู่ระบบ/สมัครสมาชิก (OTP)</div>
+      <div class="desc">เบอร์โทร → OTP → (สมัครใหม่) ชื่อ + พื้นที่สนใจ</div>
+    </a>
+    <a class="index-card" href="saleng-pending-approval.html">
+      <div class="num">#12</div>
+      <div class="title">รอ Admin อนุมัติบัญชี</div>
+      <div class="desc">สถานะบัญชีก่อนเริ่มรับงานได้</div>
+    </a>
+    <a class="index-card" href="saleng-job-list.html">
+      <div class="num">#13</div>
+      <div class="title">รายการคำขอที่เปิดอยู่</div>
+      <div class="desc">filter พื้นที่/ประเภทขยะ + job card</div>
+    </a>
+    <a class="index-card" href="saleng-job-detail-accept.html">
+      <div class="num">#14</div>
+      <div class="title">รายละเอียดงานก่อนกดรับ</div>
+      <div class="desc">รูปขยะ, ปริมาณ, ตำแหน่งโดยประมาณ, กดรับงาน</div>
+    </a>
+    <a class="index-card" href="saleng-job-current-status.html">
+      <div class="num">#15</div>
+      <div class="title">งานของฉัน</div>
+      <div class="desc">สถานะ รอ confirm / ยืนยันแล้ว, contact card, ปิดงาน/ยกเลิก</div>
+    </a>
+    <a class="index-card" href="saleng-receipt-form.html">
+      <div class="num">#16</div>
+      <div class="title">ฟอร์มส่งใบเสร็จ</div>
+      <div class="desc">รายการขยะหลายแถว, คำนวณยอด, เลือกช่องทาง settle ค่าธรรมเนียม</div>
+    </a>
+  </div>
+
+  <p class="caption">
+    เอกสารต้นฉบับ (spec ละเอียดของแต่ละหน้า + business rule + states): ดูที่
+    <a href="../index.md" style="color:var(--color-primary-600); font-weight:600;">docs/02-design/01-prototypes/v1/index.md</a>
+    บนเครื่อง หรือเปิดใน Obsidian
+  </p>
+</div>
+</body>
+</html>

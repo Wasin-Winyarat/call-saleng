@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>Saleng — งานของฉัน</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="page-label">15 · <b>Saleng — งานของฉัน (รายละเอียดงานหลัง confirm)</b> · <a href="index.html">← กลับหน้ารวม</a></div>
+
+<div style="max-width:390px; margin:0 auto 12px; display:flex; gap:8px; justify-content:center;">
+  <button onclick="setState('pending')" style="padding:6px 14px; border-radius:999px; border:1px solid #ccc; background:#fff; cursor:pointer; font-family:inherit; font-size:12px;">demo: รอ Admin confirm</button>
+  <button onclick="setState('confirmed')" style="padding:6px 14px; border-radius:999px; border:1px solid #ccc; background:#fff; cursor:pointer; font-family:inherit; font-size:12px;">demo: ยืนยันแล้ว</button>
+  <button onclick="setState('empty')" style="padding:6px 14px; border-radius:999px; border:1px solid #ccc; background:#fff; cursor:pointer; font-family:inherit; font-size:12px;">demo: ว่าง</button>
+</div>
+
+<div class="phone-frame">
+  <div class="phone-screen">
+    <div class="screen-scroll">
+
+      <div class="h1" style="margin-bottom:16px;">งานของฉัน</div>
+
+      <!-- EMPTY STATE -->
+      <div id="emptyState" style="display:none;" class="empty-state">
+        <div class="empty-state-icon">📭</div>
+        <div class="empty-state-text">คุณยังไม่มีงานที่กำลังทำอยู่ตอนนี้</div>
+        <button class="btn btn-primary" onclick="location.href='saleng-job-list.html'">ไปดูรายการคำขอที่เปิดอยู่</button>
+      </div>
+
+      <div id="jobContent">
+        <div class="status-hero" id="statusHero">
+          <div class="status-hero-icon" id="statusIcon">🕐</div>
+          <div class="status-hero-label" id="statusLabel">รอ Admin confirm</div>
+          <div class="status-hero-meta">นัดหมาย 27 ก.ค. 2569 · 08:00–13:00</div>
+        </div>
+
+        <div class="card">
+          <div class="h3" style="margin-bottom:10px;">รายละเอียดงาน</div>
+          <div class="chip-row" style="margin-bottom:10px;">
+            <div class="chip readonly">พลาสติก</div>
+            <div class="chip readonly">กระดาษ</div>
+          </div>
+          <div class="body-sm" style="margin-bottom:6px;"><b>ปริมาณโดยประมาณ:</b> กลาง (5–15 กก.)</div>
+          <div class="body-sm" id="addressLine" style="margin-bottom:6px;"><b>พื้นที่:</b> ตำบลรอบเวียง</div>
+          <div class="caption" id="hintLine">รายละเอียดที่อยู่และข้อมูลติดต่อเต็มจะแสดงเมื่อ Admin ยืนยันการจับคู่แล้ว</div>
+        </div>
+
+        <div class="card contact-card" id="contactCard" style="display:none;">
+          <div class="avatar">🙋</div>
+          <div class="contact-card-body">
+            <div class="contact-card-name">คุณสมหญิง ใจงาม</div>
+            <div class="contact-card-meta">089-123-4567 · 45/2 ถ.บรรพปราการ ต.รอบเวียง</div>
+          </div>
+          <button class="call-btn">📞</button>
+        </div>
+
+        <div class="caption" style="margin-bottom:16px;">ราคาซื้อขายจริงตกลงกันหน้างานเป็นเงินสด ระบบไม่มีส่วนเกี่ยวข้องกับการกำหนดราคานี้</div>
+      </div>
+
+    </div>
+
+    <div class="sticky-footer" id="footerPending">
+      <button class="btn btn-outline-danger" onclick="openModal('cancelModal')">ยกเลิกงาน</button>
+    </div>
+    <div class="sticky-footer" id="footerConfirmed" style="display:none;">
+      <button class="btn btn-primary" onclick="openModal('closeModal')">ปิดงาน (ซื้อขายสำเร็จแล้ว)</button>
+      <button class="btn btn-outline-danger" onclick="openModal('cancelModal')">ยกเลิกงาน</button>
+    </div>
+
+    <div class="tab-bar">
+      <a class="tab-item" href="saleng-job-list.html"><span class="tab-icon">🏠</span>หน้าแรก</a>
+      <a class="tab-item active" href="saleng-job-current-status.html"><span class="tab-icon">📋</span>งานของฉัน</a>
+      <a class="tab-item" href="#"><span class="tab-icon">👤</span>โปรไฟล์</a>
+    </div>
+
+    <div class="modal-overlay" id="cancelModal">
+      <div class="modal-box">
+        <div class="modal-title">ยืนยันยกเลิกงานนี้?</div>
+        <div class="modal-desc">เช่น ไปไม่ถึงหรือ user ไม่อยู่บ้าน — เมื่อยกเลิกแล้วงานนี้จะกลับไปเปิดให้สาเล้งคนอื่นรับต่อได้ทันที</div>
+        <div class="modal-actions">
+          <button class="btn btn-danger-fill" onclick="location.href='saleng-job-list.html'">ยกเลิกงาน</button>
+          <button class="btn btn-text-secondary" onclick="closeModal('cancelModal')">ไม่ยกเลิก</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="closeModal">
+      <div class="modal-box">
+        <div class="modal-title">ยืนยันปิดงานนี้?</div>
+        <div class="modal-desc">ยืนยันว่าคุณไปรับซื้อขยะและตกลงราคากับ user เรียบร้อยแล้ว</div>
+        <div class="modal-actions">
+          <button class="btn btn-primary" onclick="location.href='saleng-receipt-form.html'">ปิดงาน</button>
+          <button class="btn btn-text-secondary" onclick="closeModal('closeModal')">ยกเลิก</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function openModal(id){ document.getElementById(id).classList.add('open'); }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+
+function setState(state) {
+  const jobContent = document.getElementById('jobContent');
+  const emptyState = document.getElementById('emptyState');
+  const footerPending = document.getElementById('footerPending');
+  const footerConfirmed = document.getElementById('footerConfirmed');
+  const hero = document.getElementById('statusHero');
+  const contactCard = document.getElementById('contactCard');
+  const hintLine = document.getElementById('hintLine');
+  const addressLine = document.getElementById('addressLine');
+
+  if (state === 'empty') {
+    jobContent.style.display = 'none';
+    emptyState.style.display = 'block';
+    footerPending.style.display = 'none';
+    footerConfirmed.style.display = 'none';
+    return;
+  }
+  jobContent.style.display = 'block';
+  emptyState.style.display = 'none';
+
+  if (state === 'pending') {
+    hero.classList.add('pending');
+    document.getElementById('statusIcon').textContent = '🕐';
+    document.getElementById('statusLabel').textContent = 'รอ Admin confirm';
+    contactCard.style.display = 'none';
+    hintLine.style.display = 'block';
+    addressLine.innerHTML = '<b>พื้นที่:</b> ตำบลรอบเวียง';
+    footerPending.style.display = 'flex';
+    footerConfirmed.style.display = 'none';
+  } else {
+    hero.classList.remove('pending');
+    document.getElementById('statusIcon').textContent = '✅';
+    document.getElementById('statusLabel').textContent = 'ยืนยันแล้ว';
+    contactCard.style.display = 'flex';
+    hintLine.style.display = 'none';
+    addressLine.innerHTML = '<b>ที่อยู่:</b> 45/2 ถ.บรรพปราการ ต.รอบเวียง (ใกล้วัดพระแก้ว)';
+    footerPending.style.display = 'none';
+    footerConfirmed.style.display = 'flex';
+  }
+}
+setState('pending');
+</script>
+</body>
+</html>

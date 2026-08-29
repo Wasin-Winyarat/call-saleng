@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>Saleng — รายละเอียดงานก่อนกดรับ</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="page-label">14 · <b>Saleng — รายละเอียดงานก่อนกดรับ (Self-pick)</b> · <a href="index.html">← กลับหน้ารวม</a></div>
+
+<div class="phone-frame">
+  <div class="phone-screen">
+    <div class="screen-scroll">
+
+      <div class="header-back">
+        <div class="back-chevron" onclick="location.href='saleng-job-list.html'">←</div>
+        <div class="header-back-title">รายละเอียดคำขอ</div>
+      </div>
+
+      <div class="photo-row">
+        <div class="photo-thumb">📷</div>
+        <div class="photo-thumb">📷</div>
+        <div class="photo-thumb">📷</div>
+      </div>
+
+      <div class="card">
+        <div class="h3" style="margin-bottom:10px;">สรุปคำขอ</div>
+        <div class="chip-row" style="margin-bottom:10px;">
+          <div class="chip readonly">พลาสติก</div>
+          <div class="chip readonly">กระดาษ</div>
+        </div>
+        <div class="body-sm" style="margin-bottom:6px;"><b>ปริมาณโดยประมาณ:</b> กลาง (5–15 กก.)</div>
+        <div class="body-sm text-secondary">"มีขวดน้ำพลาสติกเยอะ กับกล่องกระดาษลังใหญ่ 2 กล่อง"</div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span>📍</span>
+          <div>
+            <div class="body-sm" style="font-weight:600;">ตำบลรอบเวียง</div>
+            <div class="caption">ระยะทางโดยประมาณ ≈ 3.2 กม. จากตำแหน่งปัจจุบัน</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span>🗓️</span>
+          <div class="body-sm" style="font-weight:600;">27 ก.ค. 2569 · 08:00–13:00</div>
+        </div>
+      </div>
+
+      <div class="caption" style="margin-bottom:16px;">ราคาซื้อขายจริงตกลงกันหน้างานเป็นเงินสด ระบบไม่มีส่วนเกี่ยวข้องกับการกำหนดราคานี้</div>
+
+    </div>
+
+    <div class="sticky-footer">
+      <button class="btn btn-primary" onclick="openModal('acceptModal')">รับงานนี้</button>
+    </div>
+
+    <div class="modal-overlay" id="acceptModal">
+      <div class="modal-box">
+        <div class="modal-title">ยืนยันรับงานนี้?</div>
+        <div class="modal-desc">การรับงานนี้จะจองสิทธิ์ของคุณ แต่ต้องรอ Admin ยืนยันอีกครั้งก่อนงานเริ่มอย่างเป็นทางการ</div>
+        <div class="modal-actions">
+          <button class="btn btn-primary" onclick="location.href='saleng-job-current-status.html?state=pending'">รับงานนี้</button>
+          <button class="btn btn-text-secondary" onclick="closeModal('acceptModal')">ยกเลิก</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="takenModal">
+      <div class="modal-box" style="text-align:center;">
+        <div style="font-size:32px; margin-bottom:8px;">😥</div>
+        <div class="modal-title">งานนี้มีคนรับไปแล้ว</div>
+        <div class="modal-actions">
+          <button class="btn btn-primary" onclick="location.href='saleng-job-list.html'">กลับไปดูรายการงาน</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function openModal(id){ document.getElementById(id).classList.add('open'); }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+</script>
+</body>
+</html>

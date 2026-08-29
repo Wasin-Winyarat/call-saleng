@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>Saleng — รอ Admin อนุมัติบัญชี</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="page-label">12 · <b>Saleng — รอ Admin อนุมัติบัญชี</b> · <a href="index.html">← กลับหน้ารวม</a></div>
+
+<div class="phone-frame">
+  <div class="phone-screen">
+    <div class="screen-scroll" style="display:flex; flex-direction:column; justify-content:center; text-align:center; padding-top:60px;">
+
+      <div class="status-hero pending" style="margin:0 auto 24px; width:180px; height:180px; display:flex; flex-direction:column; align-items:center; justify-content:center; border-radius:50%;">
+        <div class="status-hero-icon">🕐</div>
+        <div style="font-size:14px; font-weight:700;">รอการตรวจสอบ</div>
+      </div>
+
+      <div class="h2" style="margin-bottom:10px;">บัญชีของคุณอยู่ระหว่างการตรวจสอบ</div>
+      <div class="text-secondary" style="margin-bottom:28px;">
+        ทีมงานกำลังตรวจสอบข้อมูลการสมัครของคุณ เมื่ออนุมัติแล้วคุณจะสามารถดูและรับงานได้ทันที กระบวนการนี้อาจใช้เวลาสักครู่
+      </div>
+
+      <button class="btn btn-secondary" style="margin-bottom:12px;" onclick="recheck()">ตรวจสอบสถานะอีกครั้ง</button>
+      <button class="btn btn-text-danger" onclick="openModal('logoutModal')">ออกจากระบบ</button>
+
+    </div>
+
+    <div class="modal-overlay" id="logoutModal">
+      <div class="modal-box">
+        <div class="modal-title">ยืนยันออกจากระบบ?</div>
+        <div class="modal-desc">คุณจะต้องเข้าสู่ระบบใหม่อีกครั้งด้วยเบอร์โทร/OTP</div>
+        <div class="modal-actions">
+          <button class="btn btn-danger-fill" onclick="closeModal('logoutModal')">ออกจากระบบ</button>
+          <button class="btn btn-text-secondary" onclick="closeModal('logoutModal')">ยกเลิก</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast">ยังอยู่ระหว่างการตรวจสอบ</div>
+  </div>
+</div>
+
+<script>
+function openModal(id){ document.getElementById(id).classList.add('open'); }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+function recheck(){
+  const t = document.getElementById('toast');
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+</script>
+</body>
+</html>

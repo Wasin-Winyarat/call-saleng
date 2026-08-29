@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>Saleng — เข้าสู่ระบบ/สมัครสมาชิก</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="page-label">11 · <b>Saleng — เข้าสู่ระบบ/สมัครสมาชิก (เบอร์โทร/OTP)</b> · <a href="index.html">← กลับหน้ารวม</a></div>
+
+<div class="phone-frame">
+  <div class="phone-screen">
+    <div class="screen-scroll" style="padding-top:40px; text-align:center;">
+
+      <div style="font-size:44px; margin-bottom:6px;">🚛♻️</div>
+      <div style="font-weight:700; font-size:18px; color:var(--color-primary-700);">กรีนซาเล้ง</div>
+      <div class="caption" style="margin:4px 0 2px;">บริการเก็บขยะรีไซเคิล — อนุรักษ์สิ่งแวดล้อม ชุมชนสะอาด</div>
+      <div class="caption" style="font-weight:700; color:var(--color-text-primary); margin-bottom:24px;">สำหรับคนขับรถซาเล้ง</div>
+
+      <div class="segmented">
+        <button id="tabLogin" class="active" onclick="setMode('login')">เข้าสู่ระบบ</button>
+        <button id="tabSignup" onclick="setMode('signup')">สมัครเป็นสาเล้ง</button>
+      </div>
+
+      <div style="text-align:left;">
+        <!-- STEP 1: phone -->
+        <div id="step1">
+          <div class="field">
+            <label>เบอร์โทรศัพท์</label>
+            <input type="tel" placeholder="08X-XXX-XXXX">
+            <div class="hint">เราจะส่งรหัส OTP ไปยังเบอร์นี้</div>
+          </div>
+          <button class="btn btn-primary" onclick="showStep(2)">ขอรหัส OTP</button>
+        </div>
+
+        <!-- STEP 2: otp -->
+        <div id="step2" style="display:none;">
+          <label style="display:block; font-weight:600; margin-bottom:10px;">กรอกรหัส OTP 6 หลัก</label>
+          <div class="otp-row">
+            <input class="otp-box" maxlength="1" inputmode="numeric">
+            <input class="otp-box" maxlength="1" inputmode="numeric">
+            <input class="otp-box" maxlength="1" inputmode="numeric">
+            <input class="otp-box" maxlength="1" inputmode="numeric">
+            <input class="otp-box" maxlength="1" inputmode="numeric">
+            <input class="otp-box" maxlength="1" inputmode="numeric">
+          </div>
+          <div class="caption" style="margin-bottom:16px;">ขอรหัสใหม่ได้ใน 00:60</div>
+          <button class="btn btn-primary" onclick="onConfirmOtp()">ยืนยัน</button>
+        </div>
+
+        <!-- STEP 3: signup extra info -->
+        <div id="step3" style="display:none;">
+          <div class="field">
+            <label>ชื่อ-นามสกุล</label>
+            <input type="text" placeholder="เช่น สมชาย ใจดี">
+          </div>
+          <div class="field">
+            <label>พื้นที่ที่สนใจรับงาน (เลือกได้หลายรายการ)</label>
+            <div class="chip-row" style="margin-bottom:0;">
+              <div class="chip active">รอบเวียง</div>
+              <div class="chip">เวียง</div>
+              <div class="chip active">รอบเวียง(2)</div>
+              <div class="chip">แม่ยาว</div>
+              <div class="chip">นางแล</div>
+            </div>
+            <div class="hint">แก้ไขภายหลังได้ที่โปรไฟล์</div>
+          </div>
+          <button class="btn btn-primary" onclick="onSubmitSignup()">ส่งสมัคร</button>
+          <div class="caption" style="margin-top:14px;">หลังส่งสมัคร บัญชีของคุณจะรอการตรวจสอบจาก Admin ก่อนจึงจะเริ่มรับงานได้</div>
+        </div>
+
+        <!-- done note -->
+        <div id="stepDone" style="display:none; text-align:center; padding-top:12px;">
+          <div style="font-size:36px;">✅</div>
+          <div style="font-weight:700; margin:8px 0 4px;" id="doneTitle">เข้าสู่ระบบสำเร็จ</div>
+          <div class="caption" id="doneDesc">ตัวอย่าง prototype — หน้านี้จะนำทางไปหน้าถัดไปตามผลอนุมัติจริง</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+let mode = 'login';
+function setMode(m) {
+  mode = m;
+  document.getElementById('tabLogin').classList.toggle('active', m==='login');
+  document.getElementById('tabSignup').classList.toggle('active', m==='signup');
+  showStep(1);
+}
+function showStep(n) {
+  document.getElementById('step1').style.display = n===1 ? 'block' : 'none';
+  document.getElementById('step2').style.display = n===2 ? 'block' : 'none';
+  document.getElementById('step3').style.display = n===3 ? 'block' : 'none';
+  document.getElementById('stepDone').style.display = n==='done' ? 'block' : 'none';
+}
+function onConfirmOtp() {
+  if (mode === 'signup') {
+    showStep(3);
+  } else {
+    document.getElementById('doneTitle').textContent = 'เข้าสู่ระบบสำเร็จ';
+    document.getElementById('doneDesc').textContent = 'ถ้าบัญชีผ่านการอนุมัติแล้ว → ไปหน้ารายการคำขอที่เปิดอยู่ / ถ้ายังไม่อนุมัติ → ไปหน้ารอ Admin อนุมัติ';
+    showStep('done');
+  }
+}
+function onSubmitSignup() {
+  document.getElementById('doneTitle').textContent = 'ส่งใบสมัครสำเร็จ';
+  document.getElementById('doneDesc').textContent = 'ระบบจะนำทางไปหน้า "รอ Admin อนุมัติบัญชี" เสมอสำหรับบัญชีใหม่';
+  showStep('done');
+}
+// otp auto-advance
+document.querySelectorAll('.otp-box').forEach((el,i,list)=>{
+  el.addEventListener('input', ()=>{ if (el.value && list[i+1]) list[i+1].focus(); });
+});
+</script>
+</body>
+</html>
