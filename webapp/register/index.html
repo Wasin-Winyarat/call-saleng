@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>สมัครเข้าใช้งานระบบ — กรีนซาเล้ง</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared-styles.css">
+</head>
+<!-- ES module ต้องรันผ่าน local server (powershell -File ../serve.ps1) ห้ามเปิด file:// ตรงๆ -->
+<body>
+<div class="page">
+  <h1 class="h1">สมัครเข้าใช้งานระบบ</h1>
+  <div class="text-secondary text-center" style="margin-bottom:24px;">สำหรับลูกค้าเรียกรถซาเล้ง</div>
+
+  <div class="card">
+    <div class="banner error" id="errorBanner"></div>
+
+    <form id="registerForm" novalidate>
+      <div class="field" id="field-full_name">
+        <label>ชื่อ-นามสกุล <span class="req">*</span></label>
+        <input type="text" id="full_name" placeholder="เช่น สมหญิง ใจงาม">
+        <div class="error-text">กรุณากรอกชื่อ-นามสกุล</div>
+      </div>
+
+      <div class="field" id="field-phone">
+        <label>เบอร์โทรศัพท์ <span class="req">*</span></label>
+        <input type="tel" id="phone" placeholder="08X-XXX-XXXX">
+        <div class="error-text">กรุณากรอกเบอร์โทรให้ถูกต้อง</div>
+      </div>
+
+      <div class="field" id="field-password">
+        <label>รหัสผ่าน <span class="req">*</span></label>
+        <input type="password" id="password" placeholder="อย่างน้อย 6 ตัวอักษร">
+        <div class="hint">อย่างน้อย 6 ตัวอักษร</div>
+        <div class="error-text">รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร</div>
+      </div>
+
+      <div class="field" id="field-confirm_password">
+        <label>ยืนยันรหัสผ่าน <span class="req">*</span></label>
+        <input type="password" id="confirm_password" placeholder="กรอกรหัสผ่านอีกครั้ง">
+        <div class="error-text">รหัสผ่านไม่ตรงกัน</div>
+      </div>
+
+      <button type="submit" class="btn btn-primary" id="submitBtn">สมัครเข้าใช้งาน</button>
+    </form>
+
+    <div class="link-row">มีบัญชีอยู่แล้ว? <a href="../login/">เข้าสู่ระบบ</a></div>
+  </div>
+
+  <div class="link-row"><a href="../">← กลับหน้าแรก</a></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>

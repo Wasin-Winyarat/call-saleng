@@ -4,6 +4,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
 import { getStorage } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-storage.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
 
 // apiKey ของ Firebase web app ไม่ใช่ secret (ความปลอดภัยจริงบังคับที่ Firestore/Storage Security Rules)
 // จึงฝังในโค้ด client ได้ตามปกติ — ดู README ส่วน "ตั้งค่า Firebase Console" ก่อนใช้งานจริง
@@ -21,3 +22,4 @@ const app = initializeApp(firebaseConfig);
 
 export const db = getFirestore(app);
 export const storage = getStorage(app);
+export const auth = getAuth(app);

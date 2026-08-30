@@ -106,10 +106,11 @@ h1.h1 { font-size: 24px; font-weight: 700; margin: 0 0 4px; }
 
 /* --- realtime list --- */
 .request-card {
-  display: flex; gap: 12px; background: var(--color-neutral-card);
+  background: var(--color-neutral-card);
   border-radius: var(--radius-md); padding: 14px; margin-bottom: 10px;
   border: 1px solid var(--color-neutral-300);
 }
+.request-card-top { display: flex; gap: 12px; }
 .request-card-thumb {
   width: 56px; height: 56px; border-radius: var(--radius-md); flex-shrink: 0;
   background: var(--color-primary-100); display: flex; align-items: center; justify-content: center;
@@ -127,3 +128,31 @@ h1.h1 { font-size: 24px; font-weight: 700; margin: 0 0 4px; }
 }
 
 .empty-note { text-align: center; color: var(--color-text-secondary); font-size: 14px; padding: 24px 0; }
+
+/* --- chat thread ต่อคำขอ --- */
+.chat-toggle {
+  margin-top: 10px; font-size: 13px; font-weight: 600; color: var(--color-primary-600);
+  background: none; border: none; cursor: pointer; padding: 4px 0; font-family: inherit;
+}
+.chat-panel {
+  display: none; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--color-neutral-300);
+}
+.chat-panel.open { display: block; }
+.chat-messages { max-height: 180px; overflow-y: auto; margin-bottom: 8px; display: flex; flex-direction: column; gap: 6px; }
+.chat-bubble {
+  max-width: 80%; padding: 8px 12px; border-radius: var(--radius-md); font-size: 13px;
+}
+.chat-bubble.mine { align-self: flex-end; background: var(--color-primary-600); color: #fff; }
+.chat-bubble.theirs { align-self: flex-start; background: var(--color-neutral-bg); border: 1px solid var(--color-neutral-300); }
+.chat-bubble .who { font-size: 10px; opacity: .8; margin-bottom: 2px; }
+.chat-empty { font-size: 12px; color: var(--color-text-secondary); text-align: center; padding: 8px 0; }
+.chat-input-row { display: flex; gap: 8px; }
+.chat-input-row input {
+  flex: 1; padding: 8px 12px; border-radius: var(--radius-full);
+  border: 1.5px solid var(--color-neutral-300); font-size: 13px; font-family: inherit;
+}
+.chat-input-row input:focus { outline: none; border-color: var(--color-primary-600); }
+.chat-input-row button {
+  border: none; background: var(--color-primary-600); color: #fff; border-radius: var(--radius-full);
+  padding: 8px 16px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit;
+}

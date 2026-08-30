@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>Admin เข้าสู่ระบบ — กรีนซาเล้ง (ทดสอบ)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared-styles.css">
+</head>
+<!-- ES module ต้องรันผ่าน local server (powershell -File ../serve.ps1) ห้ามเปิด file:// ตรงๆ -->
+<body>
+<div class="page">
+  <h1 class="h1">Admin เข้าสู่ระบบ</h1>
+  <div class="banner error show" style="background:#FBEBE3; color:#8A5A15; margin-bottom:24px;">
+    ปุ่มนี้มีไว้สำหรับทดสอบเท่านั้น — ระบบจริงจะไม่มีปุ่ม admin ให้กดจากหน้าแรก
+  </div>
+
+  <div class="card" id="loginCard">
+    <div class="banner error" id="errorBanner"></div>
+
+    <form id="adminLoginForm" novalidate>
+      <div class="field" id="field-login_identifier">
+        <label>Login identifier <span class="req">*</span></label>
+        <input type="text" id="login_identifier" placeholder="เช่น admin1">
+        <div class="error-text">กรุณากรอก login identifier</div>
+      </div>
+
+      <div class="field" id="field-password">
+        <label>รหัสผ่าน <span class="req">*</span></label>
+        <input type="password" id="password" placeholder="รหัสผ่าน">
+        <div class="error-text">กรุณากรอกรหัสผ่าน</div>
+      </div>
+
+      <button type="submit" class="btn btn-primary" id="submitBtn">เข้าสู่ระบบ</button>
+    </form>
+  </div>
+
+  <div class="link-row"><a href="../">← กลับหน้าแรก</a></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>

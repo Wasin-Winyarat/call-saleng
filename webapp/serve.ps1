@@ -3,7 +3,7 @@
 #
 # วิธีใช้:
 #   powershell -File webapp/serve.ps1
-#   แล้วเปิด http://localhost:8080/pickup-request/
+#   แล้วเปิด http://localhost:8080/ (landing page)
 
 param(
   [int]$Port = 8080
@@ -29,7 +29,6 @@ try {
   while ($listener.IsListening) {
     $ctx = $listener.GetContext()
     $path = $ctx.Request.Url.LocalPath
-    if ($path -eq "/") { $path = "/pickup-request/index.html" }
     if ($path.EndsWith("/")) { $path = $path + "index.html" }
     $file = Join-Path $dir $path.TrimStart("/")
 

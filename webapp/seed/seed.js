@@ -1,26 +1,29 @@
-import { db } from "../firebase-config.js";
+import { db, auth } from "../firebase-config.js";
+import { phoneToEmail, adminIdToEmail, normalizePhone } from "../auth-helpers.js";
+import {
+  createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut,
+} from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
 import {
   doc, setDoc, serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
 
-// Collection names: pluralized จากชื่อ table ใน database-schema.md
-// user_account -> user_accounts, pickup_request -> pickup_requests (ให้ตรงกับ collection ที่โมดูล pickup-request ใช้อยู่แล้ว)
+// Password ตัวอย่างคงที่สำหรับทุกบัญชี seed — ใช้ทดสอบ login จริงได้ทันทีที่หน้า ../login/ และ ../admin/
+const DEMO_PASSWORD = "Demo1234!";
 
 const USERS = [
-  { id: "demo-user-1", full_name: "สมหญิง ใจงาม", phone_number: "089-123-4567", status: "active" },
-  { id: "demo-user-2", full_name: "วิชัย รักธรรม", phone_number: "082-345-6789", status: "active" },
-  { id: "demo-user-3", full_name: "อรุณี พูลสวัสดิ์", phone_number: "089-876-5432", status: "active" },
-  { id: "demo-user-4", full_name: "ประยุทธ ศรีสุข", phone_number: "086-555-1234", status: "active" },
-  { id: "demo-user-5", full_name: "กนกวรรณ แซ่ตั้ง", phone_number: "091-222-3344", status: "suspended" },
+  { full_name: "สมหญิง ใจงาม", phone_number: "089-123-4567", status: "active" },
+  { full_name: "วิชัย รักธรรม", phone_number: "082-345-6789", status: "active" },
+  { full_name: "อรุณี พูลสวัสดิ์", phone_number: "089-876-5432", status: "active" },
+  { full_name: "ประยุทธ ศรีสุข", phone_number: "086-555-1234", status: "active" },
+  { full_name: "กนกวรรณ แซ่ตั้ง", phone_number: "091-222-3344", status: "suspended" },
 ];
 
-// แต่ละคำขอผูก user_id กับ user ด้านบน 1 คน ตั้งใจให้ status ต่างกันครบทุกค่าตาม enum ของ pickup_request.status
-const REQUESTS = [
+const ADMIN = { login_identifier: "admin1", full_name: "ผู้ดูแลระบบ ทดสอบ" };
+
+// แต่ละคำขอผูก user_id กับ user ด้านบน (ตามลำดับ index) ตั้งใจให้ status ต่างกันครบทุกค่าตาม enum ของ pickup_request.status
+const REQUEST_TEMPLATES = [
   {
     id: "demo-request-1",
-    user_id: "demo-user-1",
-    contact_name: "สมหญิง ใจงาม",
-    contact_phone: "089-123-4567",
     sub_district: "รอบเวียง",
     address_text: "45/2 ถ.บรรพปราการ",
     landmark: "ใกล้วัดพระแก้ว",
@@ -32,9 +35,6 @@ const REQUESTS = [
   },
   {
     id: "demo-request-2",
-    user_id: "demo-user-2",
-    contact_name: "วิชัย รักธรรม",
-    contact_phone: "082-345-6789",
     sub_district: "เวียง",
     address_text: "12 ถ.อุตรกิจ",
     landmark: "ตรงข้ามตลาดสด",
@@ -46,9 +46,6 @@ const REQUESTS = [
   },
   {
     id: "demo-request-3",
-    user_id: "demo-user-3",
-    contact_name: "อรุณี พูลสวัสดิ์",
-    contact_phone: "089-876-5432",
     sub_district: "แม่ยาว",
     address_text: "88 หมู่ 4",
     landmark: "หลังโรงเรียนบ้านแม่ยาว",
@@ -60,9 +57,6 @@ const REQUESTS = [
   },
   {
     id: "demo-request-4",
-    user_id: "demo-user-4",
-    contact_name: "ประยุทธ ศรีสุข",
-    contact_phone: "086-555-1234",
     sub_district: "นางแล",
     address_text: "9 ซอย 3",
     landmark: "",
@@ -74,9 +68,6 @@ const REQUESTS = [
   },
   {
     id: "demo-request-5",
-    user_id: "demo-user-5",
-    contact_name: "กนกวรรณ แซ่ตั้ง",
-    contact_phone: "091-222-3344",
     sub_district: "ริมกก",
     address_text: "21 ถ.ริมกก",
     landmark: "",
@@ -90,6 +81,8 @@ const REQUESTS = [
 
 const logEl = document.getElementById("log");
 const btn = document.getElementById("seedBtn");
+const demoPasswordInline = document.getElementById("demoPasswordInline");
+demoPasswordInline.textContent = DEMO_PASSWORD;
 
 function log(message, kind = "") {
   const line = document.createElement("div");
@@ -98,37 +91,74 @@ function log(message, kind = "") {
   logEl.appendChild(line);
 }
 
+// สร้างบัญชี Auth ใหม่ ถ้ามีอยู่แล้ว (auth/email-already-in-use) ให้ sign in แทนเพื่อได้ uid เดิม
+// ทำให้กด seed ซ้ำได้โดยไม่ error และไม่สร้างบัญชีซ้ำซ้อน
+async function getOrCreateAuthUser(email, password) {
+  try {
+    const credential = await createUserWithEmailAndPassword(auth, email, password);
+    return { uid: credential.user.uid, created: true };
+  } catch (err) {
+    if (err.code === "auth/email-already-in-use") {
+      const credential = await signInWithEmailAndPassword(auth, email, password);
+      return { uid: credential.user.uid, created: false };
+    }
+    throw err;
+  }
+}
+
 btn.addEventListener("click", async () => {
   btn.disabled = true;
   logEl.innerHTML = "";
   log("เริ่มสร้างข้อมูล...");
 
   try {
-    for (const user of USERS) {
-      const { id, ...fields } = user;
-      await setDoc(doc(db, "user_accounts", id), {
-        ...fields,
+    // สำคัญ: เขียน pickup_requests ของ user แต่ละคน "ระหว่าง" ที่ยังล็อกอินเป็นคนนั้นอยู่ (ก่อน signOut)
+    // เพราะ Firestore Security Rules ที่แนะนำใน README ผูก create ไว้กับ request.auth.uid == user_id ของ doc นั้น
+    for (let i = 0; i < USERS.length; i += 1) {
+      const user = USERS[i];
+      const email = phoneToEmail(user.phone_number);
+      const { uid, created } = await getOrCreateAuthUser(email, DEMO_PASSWORD);
+
+      await setDoc(doc(db, "user_accounts", uid), {
+        full_name: user.full_name,
+        phone_number: normalizePhone(user.phone_number),
+        status: user.status,
         created_at: serverTimestamp(),
       });
-      log(`✔ user_accounts/${id} (${fields.full_name}, ${fields.status})`, "ok");
-    }
+      log(`✔ user_accounts/${uid} (${user.full_name}, ${user.status}) ${created ? "[สร้างใหม่]" : "[มีอยู่แล้ว]"}`, "ok");
 
-    for (const request of REQUESTS) {
-      const { id, ...fields } = request;
+      const { id, ...fields } = REQUEST_TEMPLATES[i];
       await setDoc(doc(db, "pickup_requests", id), {
         ...fields,
+        user_id: uid,
+        contact_name: user.full_name,
+        contact_phone: normalizePhone(user.phone_number),
         photo_urls: [],
         created_at: serverTimestamp(),
       });
-      log(`✔ pickup_requests/${id} → user_id: ${fields.user_id} (${fields.status})`, "ok");
+      log(`✔ pickup_requests/${id} → user_id: ${uid} (${fields.status})`, "ok");
+
+      await signOut(auth);
     }
 
-    log("เสร็จสิ้น — สร้าง 5 user_accounts และ 5 pickup_requests ที่ผูกกันแล้ว", "ok");
+    const adminEmail = adminIdToEmail(ADMIN.login_identifier);
+    const { uid: adminUid, created: adminCreated } = await getOrCreateAuthUser(adminEmail, DEMO_PASSWORD);
+    await setDoc(doc(db, "admin_accounts", adminUid), {
+      full_name: ADMIN.full_name,
+      login_identifier: ADMIN.login_identifier,
+    });
+    log(`✔ admin_accounts/${adminUid} (${ADMIN.full_name}) ${adminCreated ? "[สร้างใหม่]" : "[มีอยู่แล้ว]"}`, "ok");
+    await signOut(auth);
+
+    log(`เสร็จสิ้น — login ทดสอบด้วยเบอร์โทรของ user ด้านบน + password "${DEMO_PASSWORD}"`, "ok");
   } catch (err) {
     console.error(err);
-    const message = err.code === "permission-denied"
-      ? "ล้มเหลว: Firestore ปฏิเสธสิทธิ์ — ตั้งค่า Security Rules ให้ user_accounts/pickup_requests ก่อน"
-      : `ล้มเหลว: ${err.message}`;
+    const SEED_ERROR_MESSAGE = {
+      "permission-denied": "ล้มเหลว: Firestore ปฏิเสธสิทธิ์ — ตั้งค่า Security Rules ตามที่ระบุใน README ก่อน",
+      "auth/operation-not-allowed": "ล้มเหลว: ยังไม่ได้เปิด Email/Password provider ใน Firebase Console → Authentication → Sign-in method",
+      "auth/configuration-not-found": "ล้มเหลว: ยังไม่ได้เปิดใช้งาน Firebase Authentication เลย — ไปที่ Firebase Console → Authentication → Get started ก่อน",
+    };
+    const message = SEED_ERROR_MESSAGE[err.code] || `ล้มเหลว: ${err.message}`;
     log(message, "err");
   } finally {
     btn.disabled = false;

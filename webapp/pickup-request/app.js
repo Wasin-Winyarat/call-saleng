@@ -1,10 +1,13 @@
-import { db, storage } from "../firebase-config.js";
+import { db, storage, auth } from "../firebase-config.js";
 import {
-  collection, doc, setDoc, serverTimestamp, onSnapshot, query, orderBy, where,
+  collection, doc, getDoc, setDoc, serverTimestamp, onSnapshot, query, orderBy, where,
 } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
 import {
   ref, uploadBytes, getDownloadURL,
 } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-storage.js";
+import {
+  onAuthStateChanged, signOut,
+} from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
 
 const MAX_PHOTOS = 5;
 
@@ -17,10 +20,10 @@ const photoHint = document.getElementById("photoHint");
 const requestList = document.getElementById("requestList");
 const timeSlotRow = document.getElementById("timeSlotRow");
 const wasteTypeGrid = document.getElementById("wasteTypeGrid");
-const userSelect = document.getElementById("user_id");
+const userBar = document.getElementById("userBar");
 
-let activeUsers = {}; // user_id -> user_account data, เฉพาะ status = active
-
+let currentUserId = null;
+let currentProfile = null;
 let selectedFiles = [];
 
 const STATUS_LABEL = {
@@ -79,35 +82,40 @@ function renderPhotoPreview() {
   photoInput.disabled = selectedFiles.length >= MAX_PHOTOS;
 }
 
-// ---------- user_account dropdown (เฉพาะ status = active ตาม business rule) ----------
-const activeUsersQuery = query(collection(db, "user_accounts"), where("status", "==", "active"));
-
-onSnapshot(
-  activeUsersQuery,
-  (snapshot) => {
-    activeUsers = {};
-    const previousValue = userSelect.value;
-    userSelect.innerHTML = '<option value="">เลือกบัญชีผู้ใช้...</option>';
-    snapshot.forEach((docSnap) => {
-      activeUsers[docSnap.id] = docSnap.data();
-      const opt = document.createElement("option");
-      opt.value = docSnap.id;
-      opt.textContent = `${docSnap.data().full_name} (${docSnap.data().phone_number})`;
-      userSelect.appendChild(opt);
-    });
-    if (activeUsers[previousValue]) userSelect.value = previousValue;
-  },
-  (err) => console.error("โหลด user_accounts ไม่สำเร็จ", err),
-);
-
-userSelect.addEventListener("change", () => {
-  const user = activeUsers[userSelect.value];
-  if (user) {
-    document.getElementById("contact_name").value = user.full_name;
-    document.getElementById("contact_phone").value = user.phone_number;
+// ---------- auth guard: ต้อง login ก่อนถึงจะใช้หน้านี้ได้ ----------
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    window.location.href = "../login/";
+    return;
   }
+
+  currentUserId = user.uid;
+  userBar.innerHTML = `กำลังใช้งานในนาม <b id="userBarName">...</b> · <a href="#" id="logoutLink">ออกจากระบบ</a>`;
+  document.getElementById("logoutLink").addEventListener("click", async (e) => {
+    e.preventDefault();
+    await signOut(auth);
+    window.location.href = "../login/";
+  });
+
+  try {
+    const profileSnap = await getDoc(doc(db, "user_accounts", user.uid));
+    if (profileSnap.exists()) {
+      currentProfile = profileSnap.data();
+      document.getElementById("userBarName").textContent = currentProfile.full_name;
+      applyProfileAutofill();
+    }
+  } catch (err) {
+    console.error("โหลดโปรไฟล์ไม่สำเร็จ", err);
+  }
+
   validate();
 });
+
+function applyProfileAutofill() {
+  if (!currentProfile) return;
+  document.getElementById("contact_name").value = currentProfile.full_name;
+  document.getElementById("contact_phone").value = currentProfile.phone_number;
+}
 
 // ---------- validation ----------
 function fieldValue(id) {
@@ -130,7 +138,6 @@ function setFieldError(fieldId, hasError) {
 
 function validate(showErrors = false) {
   const checks = [
-    ["field-user_id", userSelect.value.length > 0],
     ["field-contact_name", fieldValue("contact_name").length > 0],
     ["field-contact_phone", /^0\d{8,9}$/.test(fieldValue("contact_phone").replace(/-/g, ""))],
     ["field-sub_district", fieldValue("sub_district").length > 0],
@@ -144,7 +151,7 @@ function validate(showErrors = false) {
     checks.forEach(([fieldId, ok]) => setFieldError(fieldId, !ok));
   }
 
-  const allValid = checks.every(([, ok]) => ok);
+  const allValid = checks.every(([, ok]) => ok) && !!currentUserId;
   submitBtn.disabled = !allValid;
   return allValid;
 }
@@ -185,12 +192,13 @@ form.addEventListener("submit", async (e) => {
     const photoUrls = selectedFiles.length ? await uploadPhotos(requestRef.id, selectedFiles) : [];
 
     await setDoc(requestRef, {
-      user_id: userSelect.value,
+      user_id: currentUserId,
       contact_name: fieldValue("contact_name"),
       contact_phone: fieldValue("contact_phone"),
       sub_district: fieldValue("sub_district"),
       address_text: fieldValue("address_text"),
       landmark: fieldValue("landmark"),
+      notes: fieldValue("notes"),
       waste_types: getWasteTypes(),
       estimated_quantity_description: document.getElementById("estimated_quantity_description").value,
       photo_urls: photoUrls,
@@ -216,7 +224,7 @@ form.addEventListener("submit", async (e) => {
 
 function resetForm() {
   form.reset();
-  userSelect.value = "";
+  applyProfileAutofill();
   selectedFiles = [];
   renderPhotoPreview();
   wasteTypeGrid.querySelectorAll(".checkbox-item").forEach((item) => item.classList.remove("checked"));
@@ -237,7 +245,8 @@ onSnapshot(
     }
     requestList.innerHTML = "";
     snapshot.forEach((docSnap) => {
-      requestList.appendChild(renderRequestCard(docSnap.data()));
+      requestList.appendChild(renderRequestCard(docSnap.id, docSnap.data()));
+      subscribeChat(docSnap.id);
     });
   },
   (err) => {
@@ -246,9 +255,12 @@ onSnapshot(
   },
 );
 
-function renderRequestCard(data) {
+function renderRequestCard(id, data) {
   const card = document.createElement("div");
   card.className = "request-card";
+
+  const top = document.createElement("div");
+  top.className = "request-card-top";
 
   const thumb = document.createElement("div");
   thumb.className = "request-card-thumb";
@@ -264,15 +276,98 @@ function renderRequestCard(data) {
   body.className = "request-card-body";
   body.innerHTML = `
     <div class="request-card-title">${escapeHtml(data.contact_name || "-")}</div>
-    <div class="request-card-meta">user_id: ${escapeHtml(data.user_id || "-")}</div>
     <div class="request-card-meta">${escapeHtml((data.waste_types || []).join(", ") || "-")} · ${escapeHtml(data.sub_district || "-")}</div>
     <div class="request-card-meta">นัด ${escapeHtml(data.requested_date || "-")} · ${escapeHtml(data.time_slot || "-")}</div>
+    ${data.notes ? `<div class="request-card-meta">หมายเหตุ: ${escapeHtml(data.notes)}</div>` : ""}
     <div class="status-pill">${STATUS_LABEL[data.status] || data.status || "-"}</div>
   `;
 
-  card.appendChild(thumb);
-  card.appendChild(body);
+  top.appendChild(thumb);
+  top.appendChild(body);
+  card.appendChild(top);
+  card.appendChild(buildChatSection(id));
   return card;
+}
+
+// ---------- chat thread ต่อคำขอ (chat_messages, sender_role: "user") ----------
+const subscribedChats = new Set();
+
+function buildChatSection(requestId) {
+  const wrap = document.createElement("div");
+  wrap.innerHTML = `
+    <button type="button" class="chat-toggle" data-request-id="${requestId}">💬 ข้อความ</button>
+    <div class="chat-panel" id="chat-panel-${requestId}">
+      <div class="chat-messages" id="chat-messages-${requestId}">
+        <div class="chat-empty">ยังไม่มีข้อความ</div>
+      </div>
+      <div class="chat-input-row">
+        <input type="text" id="chat-input-${requestId}" placeholder="พิมพ์ข้อความถึง Admin...">
+        <button type="button" id="chat-send-${requestId}">ส่ง</button>
+      </div>
+    </div>
+  `;
+
+  const toggleBtn = wrap.querySelector(".chat-toggle");
+  const panel = wrap.querySelector(`#chat-panel-${requestId}`);
+  toggleBtn.addEventListener("click", () => panel.classList.toggle("open"));
+
+  const sendMessage = async () => {
+    const input = document.getElementById(`chat-input-${requestId}`);
+    const text = input.value.trim();
+    if (!text || !currentUserId) return;
+    input.value = "";
+    try {
+      await setDoc(doc(collection(db, "chat_messages")), {
+        request_id: requestId,
+        sender_role: "user",
+        sender_id: currentUserId,
+        message_text: text,
+        sent_at: serverTimestamp(),
+      });
+    } catch (err) {
+      console.error(err);
+      showToast("ส่งข้อความไม่สำเร็จ", true);
+    }
+  };
+
+  wrap.querySelector(`#chat-send-${requestId}`).addEventListener("click", sendMessage);
+  wrap.querySelector(`#chat-input-${requestId}`).addEventListener("keydown", (e) => {
+    if (e.key === "Enter") sendMessage();
+  });
+
+  return wrap;
+}
+
+function subscribeChat(requestId) {
+  if (subscribedChats.has(requestId)) return;
+  subscribedChats.add(requestId);
+
+  const chatQuery = query(
+    collection(db, "chat_messages"),
+    where("request_id", "==", requestId),
+    orderBy("sent_at", "asc"),
+  );
+
+  onSnapshot(chatQuery, (snapshot) => {
+    const container = document.getElementById(`chat-messages-${requestId}`);
+    if (!container) return; // การ์ดยังไม่ถูก render รอบนี้ (list ถูกสร้างใหม่)
+
+    if (snapshot.empty) {
+      container.innerHTML = '<div class="chat-empty">ยังไม่มีข้อความ</div>';
+      return;
+    }
+
+    container.innerHTML = "";
+    snapshot.forEach((docSnap) => {
+      const msg = docSnap.data();
+      const isMine = msg.sender_role === "user";
+      const bubble = document.createElement("div");
+      bubble.className = `chat-bubble ${isMine ? "mine" : "theirs"}`;
+      bubble.innerHTML = `<div class="who">${isMine ? "คุณ" : "Admin"}</div>${escapeHtml(msg.message_text)}`;
+      container.appendChild(bubble);
+    });
+    container.scrollTop = container.scrollHeight;
+  }, (err) => console.error("โหลดแชทไม่สำเร็จ", err));
 }
 
 function escapeHtml(str) {

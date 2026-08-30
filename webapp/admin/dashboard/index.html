@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>Admin Dashboard — กรีนซาเล้ง</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<!-- ES module ต้องรันผ่าน local server (powershell -File ../../serve.ps1) ห้ามเปิด file:// ตรงๆ -->
+<body>
+<div class="page">
+  <div class="topbar">
+    <h1 class="h1">Admin Dashboard</h1>
+    <div id="adminBar" class="admin-bar"></div>
+  </div>
+  <div class="text-secondary" style="margin-bottom:16px;">รายการคำขอเรียกรถซาเล้งทั้งหมด (real-time จาก Firestore)</div>
+
+  <div class="chip-row" id="filterRow">
+    <div class="chip" data-status="pending_admin_review">รอตรวจสอบ</div>
+    <div class="chip" data-status="open_for_saleng">เปิดให้สาเล้งรับงาน</div>
+    <div class="chip" data-status="confirmed">ยืนยันแล้ว</div>
+    <div class="chip" data-status="cancelled">ยกเลิกแล้ว</div>
+    <div class="chip" data-status="">ทั้งหมด</div>
+  </div>
+
+  <div id="requestList">
+    <div class="empty-note">กำลังโหลด...</div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal-box">
+    <div class="modal-title" id="modalTitle">ยืนยันการทำรายการ?</div>
+    <div class="modal-desc" id="modalDesc"></div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" id="modalConfirmBtn">ยืนยัน</button>
+      <button class="btn btn-secondary" id="modalCancelBtn">ยกเลิก</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>

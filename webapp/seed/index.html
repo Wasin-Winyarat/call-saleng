@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
 <meta charset="utf-8">
-<title>สร้างข้อมูลตัวอย่าง — user_account + pickup_request</title>
+<title>สร้างข้อมูลตัวอย่าง — user_accounts / admin_accounts / pickup_requests</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -51,31 +51,42 @@
 <div class="page">
   <h1>สร้างข้อมูลตัวอย่าง</h1>
   <div class="text-secondary">
-    Seed 5 บัญชี <code>user_account</code> + คำขอ <code>pickup_request</code> ที่ผูก <code>user_id</code> กับแต่ละบัญชี (คนละสถานะ เพื่อสาธิต status enum เต็มรูปแบบ) —
-    ใช้ doc id คงที่ (<code>demo-user-1..5</code> / <code>demo-request-1..5</code>) กดซ้ำได้ ไม่สร้างซ้ำซ้อน
+    Seed ผ่าน <b>Firebase Authentication จริง</b> (Email/Password provider — ต้องเปิดใน Firebase Console ก่อน ดู README) —
+    สร้าง 5 บัญชี <code>user_accounts</code> + 1 บัญชี <code>admin_accounts</code> + คำขอ <code>pickup_requests</code>
+    ที่ผูก <code>user_id</code> เป็น uid จริงของแต่ละบัญชี กดซ้ำได้ (ถ้าบัญชีมีอยู่แล้วจะ sign in เพื่อเอา uid เดิมแทนการสร้างซ้ำ)
+  </div>
+  <div class="text-secondary" style="margin-top:8px;">
+    หมายเหตุ: ถ้าเคยกด seed จากเวอร์ชันก่อนหน้า (แบบยังไม่มี login) จะมี doc เก่าชื่อ <code>demo-user-1..5</code> /
+    <code>demo-request-1..5</code> ค้างอยู่ใน Firestore ซึ่งไม่ผูกกับ uid จริงอีกต่อไป — ปล่อยทิ้งไว้ได้ไม่กระทบอะไร
+    หรือลบเองผ่าน Firebase Console ถ้าต้องการให้ข้อมูลสะอาด
   </div>
 
   <div class="card">
-    <div style="font-weight:700; margin-bottom:10px;">บัญชี user ที่จะสร้าง</div>
+    <div style="font-weight:700; margin-bottom:10px;">บัญชี user ที่จะสร้าง (login ด้วยเบอร์โทร + password <code id="demoPasswordInline"></code>)</div>
     <table>
-      <tr><th>id</th><th>ชื่อ</th><th>เบอร์โทร</th><th>สถานะ</th></tr>
-      <tr><td>demo-user-1</td><td>สมหญิง ใจงาม</td><td>089-123-4567</td><td>active</td></tr>
-      <tr><td>demo-user-2</td><td>วิชัย รักธรรม</td><td>082-345-6789</td><td>active</td></tr>
-      <tr><td>demo-user-3</td><td>อรุณี พูลสวัสดิ์</td><td>089-876-5432</td><td>active</td></tr>
-      <tr><td>demo-user-4</td><td>ประยุทธ ศรีสุข</td><td>086-555-1234</td><td>active</td></tr>
-      <tr><td>demo-user-5</td><td>กนกวรรณ แซ่ตั้ง</td><td>091-222-3344</td><td>suspended</td></tr>
+      <tr><th>ชื่อ</th><th>เบอร์โทร (ใช้ login)</th><th>สถานะ</th></tr>
+      <tr><td>สมหญิง ใจงาม</td><td>089-123-4567</td><td>active</td></tr>
+      <tr><td>วิชัย รักธรรม</td><td>082-345-6789</td><td>active</td></tr>
+      <tr><td>อรุณี พูลสวัสดิ์</td><td>089-876-5432</td><td>active</td></tr>
+      <tr><td>ประยุทธ ศรีสุข</td><td>086-555-1234</td><td>active</td></tr>
+      <tr><td>กนกวรรณ แซ่ตั้ง</td><td>091-222-3344</td><td>suspended</td></tr>
     </table>
     <div class="text-secondary" style="margin-top:10px;">
-      demo-user-5 ตั้งเป็น <code>suspended</code> โดยตั้งใจ เพื่อสาธิต business rule "บัญชี suspended สร้างคำขอใหม่ไม่ได้" —
-      หน้าฟอร์มคำขอจะไม่แสดง user นี้เป็นตัวเลือก
+      กนกวรรณ ตั้งเป็น <code>suspended</code> โดยตั้งใจ เพื่อสาธิต business rule "บัญชี suspended login ไม่ได้" — ลอง login ด้วยเบอร์นี้ที่หน้า
+      <a href="../login/">เข้าสู่ระบบ</a> จะถูกบล็อกพร้อมข้อความ error
     </div>
+    <div style="font-weight:700; margin:16px 0 10px;">บัญชี admin ที่จะสร้าง (login ที่หน้า <a href="../admin/">Admin</a>)</div>
+    <table>
+      <tr><th>login identifier</th><th>ชื่อ</th></tr>
+      <tr><td>admin1</td><td>ผู้ดูแลระบบ ทดสอบ</td></tr>
+    </table>
   </div>
 
   <button class="btn" id="seedBtn">สร้าง/อัปเดตข้อมูลตัวอย่าง</button>
   <div class="log" id="log">ยังไม่ได้กด — กดปุ่มด้านบนเพื่อเริ่ม</div>
 
   <div class="text-secondary" style="margin-top:20px;">
-    เสร็จแล้วไปทดสอบต่อได้ที่ <a href="../pickup-request/">หน้าฟอร์มคำขอ</a>
+    เสร็จแล้วไปทดสอบต่อได้ที่ <a href="../login/">หน้าเข้าสู่ระบบ</a> (ฝั่ง user) หรือ <a href="../admin/">หน้า Admin</a>
   </div>
 </div>
 

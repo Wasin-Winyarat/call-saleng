@@ -1,0 +1,141 @@
+/* Green Saleng — Admin Dashboard
+   Tokens ตาม docs/02-design/01-prototypes/DESIGN.md */
+
+:root {
+  --color-primary-700: #1F5C3D;
+  --color-primary-600: #2F7A4D;
+  --color-primary-100: #DCEEE1;
+  --color-neutral-bg: #FAF9F6;
+  --color-neutral-card: #FFFFFF;
+  --color-neutral-300: #E5E4DF;
+  --color-text-primary: #2B2E2C;
+  --color-text-secondary: #7A7F7A;
+  --color-danger: #D97757;
+  --color-success-600: #2F7A4D;
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 22px;
+  --radius-full: 999px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--color-neutral-bg);
+  font-family: 'Noto Sans Thai', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color: var(--color-text-primary);
+  line-height: 1.5;
+}
+
+.page { max-width: 720px; margin: 0 auto; padding: 28px 20px 64px; }
+
+.topbar { display: flex; align-items: center; justify-content: space-between; }
+h1.h1 { font-size: 24px; font-weight: 700; margin: 0; }
+.admin-bar { font-size: 13px; text-align: right; }
+.admin-bar a { color: var(--color-primary-600); font-weight: 600; text-decoration: none; }
+.text-secondary { color: var(--color-text-secondary); font-size: 14px; }
+
+.chip-row { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 18px; padding-bottom: 4px; }
+.chip {
+  flex-shrink: 0; padding: 8px 14px; border-radius: var(--radius-full);
+  font-size: 13px; font-weight: 600; border: 1px solid var(--color-neutral-300);
+  background: var(--color-neutral-card); color: var(--color-text-primary); cursor: pointer;
+  white-space: nowrap;
+}
+.chip.active { background: var(--color-primary-600); color: #fff; border-color: var(--color-primary-600); }
+
+.empty-note { text-align: center; color: var(--color-text-secondary); font-size: 14px; padding: 40px 0; }
+
+/* --- request card / accordion --- */
+.request-card {
+  background: var(--color-neutral-card); border-radius: var(--radius-md);
+  border: 1px solid var(--color-neutral-300); margin-bottom: 10px; overflow: hidden;
+}
+.request-card-header {
+  display: flex; align-items: center; gap: 12px; padding: 14px; cursor: pointer;
+}
+.request-card-thumb {
+  width: 48px; height: 48px; border-radius: var(--radius-md); flex-shrink: 0;
+  background: var(--color-primary-100); display: flex; align-items: center; justify-content: center;
+  font-size: 20px; overflow: hidden;
+}
+.request-card-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.request-card-header-body { flex: 1; min-width: 0; }
+.request-card-title { font-weight: 700; font-size: 15px; margin-bottom: 2px; }
+.request-card-meta { font-size: 13px; color: var(--color-text-secondary); }
+.request-card-chevron { color: var(--color-text-secondary); transition: transform .2s; }
+.request-card.open .request-card-chevron { transform: rotate(90deg); }
+
+.status-pill {
+  display: inline-flex; align-items: center; font-size: 11px; font-weight: 700;
+  padding: 3px 10px; border-radius: var(--radius-full); margin-top: 4px;
+}
+.status-pill.pending_admin_review { background: var(--color-accent-peach-100, #FDE9D9); color: #8A5A15; }
+.status-pill.open_for_saleng { background: #E3F0FB; color: #1F5C7A; }
+.status-pill.pending_match_confirm { background: var(--color-neutral-300); color: var(--color-text-secondary); }
+.status-pill.confirmed { background: var(--color-primary-100); color: var(--color-primary-700); }
+.status-pill.completed { background: var(--color-primary-100); color: var(--color-primary-700); }
+.status-pill.cancelled { background: #FBEBE3; color: var(--color-danger); }
+
+.request-card-detail { display: none; padding: 0 14px 16px; border-top: 1px solid var(--color-neutral-300); }
+.request-card.open .request-card-detail { display: block; padding-top: 12px; }
+
+.detail-row { font-size: 14px; margin-bottom: 6px; }
+.detail-row b { font-weight: 600; }
+
+.photo-row { display: flex; gap: 8px; overflow-x: auto; margin: 10px 0; }
+.photo-thumb { width: 72px; height: 72px; border-radius: var(--radius-md); flex-shrink: 0; overflow: hidden; }
+.photo-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+.action-row { display: flex; gap: 10px; margin-top: 14px; }
+.action-row .btn { flex: 1; }
+
+.btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 44px; border-radius: var(--radius-lg);
+  font-size: 14px; font-weight: 700; border: none; cursor: pointer; font-family: inherit;
+}
+.btn-primary { background: var(--color-primary-600); color: #fff; }
+.btn-secondary { background: var(--color-neutral-card); color: var(--color-text-secondary); border: 1.5px solid var(--color-neutral-300); }
+.btn-danger { background: var(--color-danger); color: #fff; }
+
+/* --- chat thread (admin side) --- */
+.chat-section { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--color-neutral-300); }
+.chat-section-title { font-size: 13px; font-weight: 700; margin-bottom: 8px; }
+.chat-messages { max-height: 200px; overflow-y: auto; margin-bottom: 8px; display: flex; flex-direction: column; gap: 6px; }
+.chat-bubble { max-width: 80%; padding: 8px 12px; border-radius: var(--radius-md); font-size: 13px; }
+.chat-bubble.mine { align-self: flex-end; background: var(--color-primary-600); color: #fff; }
+.chat-bubble.theirs { align-self: flex-start; background: var(--color-neutral-bg); border: 1px solid var(--color-neutral-300); }
+.chat-bubble .who { font-size: 10px; opacity: .8; margin-bottom: 2px; }
+.chat-empty { font-size: 12px; color: var(--color-text-secondary); text-align: center; padding: 8px 0; }
+.chat-input-row { display: flex; gap: 8px; }
+.chat-input-row input {
+  flex: 1; padding: 8px 12px; border-radius: var(--radius-full);
+  border: 1.5px solid var(--color-neutral-300); font-size: 13px; font-family: inherit;
+}
+.chat-input-row input:focus { outline: none; border-color: var(--color-primary-600); }
+.chat-input-row button {
+  border: none; background: var(--color-primary-600); color: #fff; border-radius: var(--radius-full);
+  padding: 8px 16px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit;
+}
+
+/* --- modal --- */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(43,46,44,.45);
+  display: none; align-items: center; justify-content: center; padding: 24px; z-index: 20;
+}
+.modal-overlay.open { display: flex; }
+.modal-box { background: var(--color-neutral-card); border-radius: var(--radius-md); padding: 22px 20px; width: 100%; max-width: 320px; }
+.modal-title { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+.modal-desc { font-size: 14px; color: var(--color-text-secondary); margin-bottom: 18px; }
+.modal-actions { display: flex; flex-direction: column; gap: 8px; }
+
+.toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  background: var(--color-text-primary); color: #fff; font-size: 14px;
+  padding: 12px 20px; border-radius: var(--radius-md); opacity: 0; pointer-events: none;
+  transition: opacity .25s; z-index: 30;
+}
+.toast.show { opacity: .95; }
+.toast.error { background: var(--color-danger); }
