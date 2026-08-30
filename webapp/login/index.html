@@ -10,6 +10,27 @@
 </head>
 <!-- เปิดไฟล์นี้ตรงๆ (double-click) ได้เลย ไม่ต้องรัน server -->
 <body>
+
+<!-- ===== TEST ONLY: ลบ <div id="testCreds">...</div> และ <script> ท้ายมันทั้งหมดก่อนใช้งานจริง ===== -->
+<div id="testCreds" style="position:fixed; top:12px; right:12px; z-index:50; background:#fff; border:1.5px solid #E5E4DF; border-radius:12px; padding:12px 14px; font-size:12px; max-width:210px; box-shadow:0 4px 16px rgba(0,0,0,.1); font-family:'Noto Sans Thai', system-ui, sans-serif;">
+  <div style="font-weight:700; margin-bottom:6px; color:#D97757;">สำหรับทดสอบ — ลบก่อนใช้จริง</div>
+  <div style="color:#7A7F7A; margin-bottom:6px;">password ทุกคน: <b>Demo1234!</b> · คลิกแถวเพื่อกรอกให้อัตโนมัติ</div>
+  <div class="test-cred-row" data-phone="0891234567" style="cursor:pointer; padding:5px 0; border-top:1px solid #E5E4DF;">089-123-4567</div>
+  <div class="test-cred-row" data-phone="0823456789" style="cursor:pointer; padding:5px 0; border-top:1px solid #E5E4DF;">082-345-6789</div>
+  <div class="test-cred-row" data-phone="0898765432" style="cursor:pointer; padding:5px 0; border-top:1px solid #E5E4DF;">089-876-5432</div>
+  <div class="test-cred-row" data-phone="0865551234" style="cursor:pointer; padding:5px 0; border-top:1px solid #E5E4DF;">086-555-1234</div>
+  <div class="test-cred-row" data-phone="0912223344" style="cursor:pointer; padding:5px 0; border-top:1px solid #E5E4DF; color:#D97757;">091-222-3344 (suspended)</div>
+</div>
+<script>
+  document.querySelectorAll("#testCreds .test-cred-row").forEach((row) => {
+    row.addEventListener("click", () => {
+      document.getElementById("phone").value = row.dataset.phone;
+      document.getElementById("password").value = "Demo1234!";
+    });
+  });
+</script>
+<!-- ===== END TEST ONLY ===== -->
+
 <div class="page">
   <h1 class="h1">เข้าสู่ระบบ</h1>
   <div class="text-secondary text-center" style="margin-bottom:24px;">สำหรับลูกค้าเรียกรถซาเล้ง</div>
