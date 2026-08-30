@@ -1,5 +1,7 @@
 # Local static file server สำหรับรัน webapp/ โดยไม่ต้องมี Node.js / Python
-# จำเป็นเพราะ ES module (type="module") ที่ import Firebase SDK จะโดนเบราว์เซอร์บล็อกด้วย CORS ถ้าเปิดผ่าน file:// ตรงๆ
+# ไม่บังคับต้องใช้แล้ว — ไฟล์ .html ในโฟลเดอร์นี้เปิดตรงๆ แบบ double-click (file://) ได้เลย
+# (ใช้ Firebase compat SDK ผ่าน <script> ธรรมดา ไม่ใช่ ES module ที่โดน CORS บล็อกตอนเปิดผ่าน file://)
+# สคริปต์นี้เก็บไว้เผื่ออยากรันผ่าน http:// จริงๆ (เช่น เทส path แบบเดียวกับตอน deploy)
 #
 # วิธีใช้:
 #   powershell -File webapp/serve.ps1
@@ -35,6 +37,7 @@ try {
     if (Test-Path $file -PathType Leaf) {
       $ext = [System.IO.Path]::GetExtension($file)
       $ctx.Response.ContentType = if ($mime[$ext]) { $mime[$ext] } else { "application/octet-stream" }
+      $ctx.Response.Headers.Add("Cache-Control", "no-store")
       $bytes = [System.IO.File]::ReadAllBytes($file)
       $ctx.Response.OutputStream.Write($bytes, 0, $bytes.Length)
     } else {

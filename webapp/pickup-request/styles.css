@@ -80,13 +80,6 @@ h1.h1 { font-size: 24px; font-weight: 700; margin: 0 0 4px; }
 }
 .radio-item.checked { border-color: var(--color-primary-600); background: var(--color-primary-100); color: var(--color-primary-700); }
 
-.photo-input-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
-.photo-thumb {
-  width: 72px; height: 72px; border-radius: var(--radius-md); overflow: hidden;
-  background: var(--color-neutral-300); position: relative; flex-shrink: 0;
-}
-.photo-thumb img { width: 100%; height: 100%; object-fit: cover; }
-
 .btn {
   display: flex; align-items: center; justify-content: center; gap: 8px;
   width: 100%; min-height: 48px; border-radius: var(--radius-lg);
@@ -103,56 +96,3 @@ h1.h1 { font-size: 24px; font-weight: 700; margin: 0 0 4px; }
 }
 .toast.show { opacity: .95; }
 .toast.error { background: var(--color-danger); }
-
-/* --- realtime list --- */
-.request-card {
-  background: var(--color-neutral-card);
-  border-radius: var(--radius-md); padding: 14px; margin-bottom: 10px;
-  border: 1px solid var(--color-neutral-300);
-}
-.request-card-top { display: flex; gap: 12px; }
-.request-card-thumb {
-  width: 56px; height: 56px; border-radius: var(--radius-md); flex-shrink: 0;
-  background: var(--color-primary-100); display: flex; align-items: center; justify-content: center;
-  font-size: 22px; overflow: hidden;
-}
-.request-card-thumb img { width: 100%; height: 100%; object-fit: cover; }
-.request-card-body { flex: 1; min-width: 0; }
-.request-card-title { font-weight: 700; font-size: 15px; margin-bottom: 2px; }
-.request-card-meta { font-size: 13px; color: var(--color-text-secondary); margin-bottom: 2px; }
-
-.status-pill {
-  display: inline-flex; align-items: center; font-size: 11px; font-weight: 700;
-  padding: 3px 10px; border-radius: var(--radius-full); margin-top: 4px;
-  background: var(--color-accent-peach-100); color: #8A5A15;
-}
-
-.empty-note { text-align: center; color: var(--color-text-secondary); font-size: 14px; padding: 24px 0; }
-
-/* --- chat thread ต่อคำขอ --- */
-.chat-toggle {
-  margin-top: 10px; font-size: 13px; font-weight: 600; color: var(--color-primary-600);
-  background: none; border: none; cursor: pointer; padding: 4px 0; font-family: inherit;
-}
-.chat-panel {
-  display: none; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--color-neutral-300);
-}
-.chat-panel.open { display: block; }
-.chat-messages { max-height: 180px; overflow-y: auto; margin-bottom: 8px; display: flex; flex-direction: column; gap: 6px; }
-.chat-bubble {
-  max-width: 80%; padding: 8px 12px; border-radius: var(--radius-md); font-size: 13px;
-}
-.chat-bubble.mine { align-self: flex-end; background: var(--color-primary-600); color: #fff; }
-.chat-bubble.theirs { align-self: flex-start; background: var(--color-neutral-bg); border: 1px solid var(--color-neutral-300); }
-.chat-bubble .who { font-size: 10px; opacity: .8; margin-bottom: 2px; }
-.chat-empty { font-size: 12px; color: var(--color-text-secondary); text-align: center; padding: 8px 0; }
-.chat-input-row { display: flex; gap: 8px; }
-.chat-input-row input {
-  flex: 1; padding: 8px 12px; border-radius: var(--radius-full);
-  border: 1.5px solid var(--color-neutral-300); font-size: 13px; font-family: inherit;
-}
-.chat-input-row input:focus { outline: none; border-color: var(--color-primary-600); }
-.chat-input-row button {
-  border: none; background: var(--color-primary-600); color: #fff; border-radius: var(--radius-full);
-  padding: 8px 16px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit;
-}

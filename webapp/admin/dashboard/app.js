@@ -1,11 +1,3 @@
-import { db, auth } from "../../firebase-config.js";
-import {
-  collection, doc, getDoc, setDoc, updateDoc, serverTimestamp, onSnapshot, query, where, orderBy,
-} from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
-import {
-  onAuthStateChanged, signOut,
-} from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
-
 const STATUS_LABEL = {
   pending_admin_review: "รอตรวจสอบ",
   cancelled: "ยกเลิกแล้ว",
@@ -47,17 +39,17 @@ function escapeHtml(str) {
 }
 
 // ---------- auth guard: ต้อง login และมี doc ใน admin_accounts ----------
-onAuthStateChanged(auth, async (user) => {
+auth.onAuthStateChanged(async (user) => {
   if (!user) {
-    window.location.href = "../";
+    window.location.href = "../index.html";
     return;
   }
 
   try {
-    const profileSnap = await getDoc(doc(db, "admin_accounts", user.uid));
-    if (!profileSnap.exists()) {
-      await signOut(auth);
-      window.location.href = "../";
+    const profileSnap = await db.collection("admin_accounts").doc(user.uid).get();
+    if (!profileSnap.exists) {
+      await auth.signOut();
+      window.location.href = "../index.html";
       return;
     }
 
@@ -66,8 +58,8 @@ onAuthStateChanged(auth, async (user) => {
     adminBar.innerHTML = `สวัสดี <b>${escapeHtml(currentAdminName)}</b> · <a href="#" id="logoutLink">ออกจากระบบ</a>`;
     document.getElementById("logoutLink").addEventListener("click", async (e) => {
       e.preventDefault();
-      await signOut(auth);
-      window.location.href = "../";
+      await auth.signOut();
+      window.location.href = "../index.html";
     });
 
     subscribeRequests();
@@ -91,13 +83,12 @@ filterRow.querySelectorAll(".chip").forEach((chip) => {
 function subscribeRequests() {
   if (unsubscribeRequests) unsubscribeRequests();
 
-  const base = collection(db, "pickup_requests");
+  const base = db.collection("pickup_requests");
   const q = currentFilter
-    ? query(base, where("status", "==", currentFilter), orderBy("created_at", "desc"))
-    : query(base, orderBy("created_at", "desc"));
+    ? base.where("status", "==", currentFilter).orderBy("created_at", "desc")
+    : base.orderBy("created_at", "desc");
 
-  unsubscribeRequests = onSnapshot(
-    q,
+  unsubscribeRequests = q.onSnapshot(
     (snapshot) => {
       if (snapshot.empty) {
         requestList.innerHTML = '<div class="empty-note">ไม่มีคำขอในหมวดนี้</div>';
@@ -222,9 +213,9 @@ modalConfirmBtn.addEventListener("click", async () => {
   const newStatus = action === "confirm" ? "open_for_saleng" : "cancelled";
 
   try {
-    await updateDoc(doc(db, "pickup_requests", requestId), {
+    await db.collection("pickup_requests").doc(requestId).update({
       status: newStatus,
-      admin_reviewed_at: serverTimestamp(),
+      admin_reviewed_at: firebase.firestore.FieldValue.serverTimestamp(),
       admin_reviewed_by: currentAdminUid,
     });
     showToast(action === "confirm" ? "Confirm สำเร็จ" : "Reject สำเร็จ");
@@ -258,12 +249,12 @@ function buildChatSection(requestId) {
     if (!text || !currentAdminUid) return;
     input.value = "";
     try {
-      await setDoc(doc(collection(db, "chat_messages")), {
+      await db.collection("chat_messages").doc().set({
         request_id: requestId,
         sender_role: "admin",
         sender_id: currentAdminUid,
         message_text: text,
-        sent_at: serverTimestamp(),
+        sent_at: firebase.firestore.FieldValue.serverTimestamp(),
       });
     } catch (err) {
       console.error(err);
@@ -283,13 +274,11 @@ function subscribeChat(requestId) {
   if (subscribedChats.has(requestId)) return;
   subscribedChats.add(requestId);
 
-  const chatQuery = query(
-    collection(db, "chat_messages"),
-    where("request_id", "==", requestId),
-    orderBy("sent_at", "asc"),
-  );
+  const chatQuery = db.collection("chat_messages")
+    .where("request_id", "==", requestId)
+    .orderBy("sent_at", "asc");
 
-  onSnapshot(chatQuery, (snapshot) => {
+  chatQuery.onSnapshot((snapshot) => {
     const container = document.getElementById(`chat-messages-${requestId}`);
     if (!container) return;
 

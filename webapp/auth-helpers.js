@@ -2,15 +2,16 @@
 // จึงแปลงเบอร์โทร/login_identifier เป็น "synthetic email" ภายใน แล้วใช้ Email/Password provider แทน
 // ผู้ใช้เห็นแค่ช่องกรอกเบอร์โทร/รหัสผ่าน ไม่เห็น email นี้เลย — เก็บ password จริงไว้ที่ Firebase Auth
 // (hash/verify ให้ปลอดภัยอยู่แล้ว) ไม่ใช่เขียนเป็น field ลง Firestore เอง
+// (global script ธรรมดา ไม่ใช่ ES module — ดูเหตุผลใน firebase-config.js)
 
-export function normalizePhone(phone) {
+function normalizePhone(phone) {
   return phone.replace(/[\s-]/g, "");
 }
 
-export function phoneToEmail(phone) {
+function phoneToEmail(phone) {
   return `${normalizePhone(phone)}@callsaleng.app`;
 }
 
-export function adminIdToEmail(loginIdentifier) {
+function adminIdToEmail(loginIdentifier) {
   return `${loginIdentifier.trim().toLowerCase()}@callsaleng-admin.app`;
 }

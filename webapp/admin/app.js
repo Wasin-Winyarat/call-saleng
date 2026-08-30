@@ -1,9 +1,3 @@
-import { auth } from "../firebase-config.js";
-import { adminIdToEmail } from "../auth-helpers.js";
-import {
-  signInWithEmailAndPassword,
-} from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
-
 const form = document.getElementById("adminLoginForm");
 const submitBtn = document.getElementById("submitBtn");
 const errorBanner = document.getElementById("errorBanner");
@@ -51,8 +45,8 @@ form.addEventListener("submit", async (e) => {
   submitBtn.textContent = "กำลังเข้าสู่ระบบ...";
 
   try {
-    await signInWithEmailAndPassword(auth, adminIdToEmail(loginIdentifier), password);
-    window.location.href = "dashboard/";
+    await auth.signInWithEmailAndPassword(adminIdToEmail(loginIdentifier), password);
+    window.location.href = "dashboard/index.html";
   } catch (err) {
     console.error(err);
     showError(AUTH_ERROR_MESSAGE[err.code] || "เข้าสู่ระบบไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");

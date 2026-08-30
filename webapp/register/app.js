@@ -1,12 +1,3 @@
-import { db, auth } from "../firebase-config.js";
-import { phoneToEmail, normalizePhone } from "../auth-helpers.js";
-import {
-  createUserWithEmailAndPassword,
-} from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
-import {
-  doc, setDoc, serverTimestamp,
-} from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
-
 const form = document.getElementById("registerForm");
 const submitBtn = document.getElementById("submitBtn");
 const errorBanner = document.getElementById("errorBanner");
@@ -65,17 +56,17 @@ form.addEventListener("submit", async (e) => {
   submitBtn.textContent = "กำลังสมัคร...";
 
   try {
-    const credential = await createUserWithEmailAndPassword(auth, phoneToEmail(phone), password);
+    const credential = await auth.createUserWithEmailAndPassword(phoneToEmail(phone), password);
 
-    await setDoc(doc(db, "user_accounts", credential.user.uid), {
+    await db.collection("user_accounts").doc(credential.user.uid).set({
       full_name: fullName,
       phone_number: normalizePhone(phone),
       status: "active",
-      created_at: serverTimestamp(),
+      created_at: firebase.firestore.FieldValue.serverTimestamp(),
     });
 
     showToast("สมัครเข้าใช้งานสำเร็จ");
-    window.location.href = "../pickup-request/";
+    window.location.href = "../pickup-request/index.html";
   } catch (err) {
     console.error(err);
     showError(AUTH_ERROR_MESSAGE[err.code] || "สมัครเข้าใช้งานไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");

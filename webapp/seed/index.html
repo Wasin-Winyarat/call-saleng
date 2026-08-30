@@ -42,11 +42,7 @@
   a { color: var(--color-primary-600); }
 </style>
 </head>
-<!--
-  ES module ต้องรันผ่าน local server เท่านั้น (เปิด file:// ตรงๆ จะโดน CORS บล็อก):
-    powershell -File ../serve.ps1
-  แล้วเปิด http://localhost:8080/seed/
--->
+<!-- เปิดไฟล์นี้ตรงๆ (double-click) ได้เลย ไม่ต้องรัน server -->
 <body>
 <div class="page">
   <h1>สร้างข้อมูลตัวอย่าง</h1>
@@ -73,9 +69,9 @@
     </table>
     <div class="text-secondary" style="margin-top:10px;">
       กนกวรรณ ตั้งเป็น <code>suspended</code> โดยตั้งใจ เพื่อสาธิต business rule "บัญชี suspended login ไม่ได้" — ลอง login ด้วยเบอร์นี้ที่หน้า
-      <a href="../login/">เข้าสู่ระบบ</a> จะถูกบล็อกพร้อมข้อความ error
+      <a href="../login/index.html">เข้าสู่ระบบ</a> จะถูกบล็อกพร้อมข้อความ error
     </div>
-    <div style="font-weight:700; margin:16px 0 10px;">บัญชี admin ที่จะสร้าง (login ที่หน้า <a href="../admin/">Admin</a>)</div>
+    <div style="font-weight:700; margin:16px 0 10px;">บัญชี admin ที่จะสร้าง (login ที่หน้า <a href="../admin/index.html">Admin</a>)</div>
     <table>
       <tr><th>login identifier</th><th>ชื่อ</th></tr>
       <tr><td>admin1</td><td>ผู้ดูแลระบบ ทดสอบ</td></tr>
@@ -86,10 +82,15 @@
   <div class="log" id="log">ยังไม่ได้กด — กดปุ่มด้านบนเพื่อเริ่ม</div>
 
   <div class="text-secondary" style="margin-top:20px;">
-    เสร็จแล้วไปทดสอบต่อได้ที่ <a href="../login/">หน้าเข้าสู่ระบบ</a> (ฝั่ง user) หรือ <a href="../admin/">หน้า Admin</a>
+    เสร็จแล้วไปทดสอบต่อได้ที่ <a href="../login/index.html">หน้าเข้าสู่ระบบ</a> (ฝั่ง user) หรือ <a href="../admin/index.html">หน้า Admin</a>
   </div>
 </div>
 
-<script type="module" src="seed.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script src="../firebase-config.js"></script>
+<script src="../auth-helpers.js"></script>
+<script src="seed.js"></script>
 </body>
 </html>

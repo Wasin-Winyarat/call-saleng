@@ -8,12 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 </head>
-<!--
-  หน้านี้ใช้ ES module (type="module") import Firebase SDK — เบราว์เซอร์จะบล็อกด้วย CORS
-  ถ้าเปิดตรงๆ แบบ file:// ต้องรันผ่าน local server ก่อนเท่านั้น เช่น:
-    powershell -File ../serve.ps1
-  แล้วเปิด http://localhost:8080/pickup-request/
--->
+<!-- เปิดไฟล์นี้ตรงๆ (double-click) ได้เลย ไม่ต้องรัน server -->
 <body>
 <div class="page">
   <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
@@ -90,13 +85,6 @@
       </select>
     </div>
 
-    <div class="field">
-      <label>รูปถ่ายขยะ (ไม่บังคับ สูงสุด 5 รูป)</label>
-      <input type="file" id="photoInput" accept="image/*" multiple>
-      <div class="photo-input-row" id="photoPreview"></div>
-      <div class="hint" id="photoHint">เลือกได้สูงสุด 5 รูป</div>
-    </div>
-
     <div class="h2" style="margin-top:8px;">วันเวลาที่ต้องการให้เข้ารับ</div>
 
     <div class="field" id="field-requested_date">
@@ -121,17 +109,14 @@
 
     <button type="submit" class="btn btn-primary" id="submitBtn" disabled>ส่งคำขอ</button>
   </form>
-
-  <div class="card">
-    <div class="h2">คำขอล่าสุด (real-time จาก Firestore)</div>
-    <div id="requestList">
-      <div class="empty-note">ยังไม่มีคำขอ — ลองส่งฟอร์มด้านบนดูได้เลย</div>
-    </div>
-  </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
-<script type="module" src="app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script src="../firebase-config.js"></script>
+<script src="app.js"></script>
 </body>
 </html>

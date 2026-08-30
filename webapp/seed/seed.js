@@ -1,12 +1,3 @@
-import { db, auth } from "../firebase-config.js";
-import { phoneToEmail, adminIdToEmail, normalizePhone } from "../auth-helpers.js";
-import {
-  createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut,
-} from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
-import {
-  doc, setDoc, serverTimestamp,
-} from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
-
 // Password ตัวอย่างคงที่สำหรับทุกบัญชี seed — ใช้ทดสอบ login จริงได้ทันทีที่หน้า ../login/ และ ../admin/
 const DEMO_PASSWORD = "Demo1234!";
 
@@ -95,11 +86,11 @@ function log(message, kind = "") {
 // ทำให้กด seed ซ้ำได้โดยไม่ error และไม่สร้างบัญชีซ้ำซ้อน
 async function getOrCreateAuthUser(email, password) {
   try {
-    const credential = await createUserWithEmailAndPassword(auth, email, password);
+    const credential = await auth.createUserWithEmailAndPassword(email, password);
     return { uid: credential.user.uid, created: true };
   } catch (err) {
     if (err.code === "auth/email-already-in-use") {
-      const credential = await signInWithEmailAndPassword(auth, email, password);
+      const credential = await auth.signInWithEmailAndPassword(email, password);
       return { uid: credential.user.uid, created: false };
     }
     throw err;
@@ -119,36 +110,36 @@ btn.addEventListener("click", async () => {
       const email = phoneToEmail(user.phone_number);
       const { uid, created } = await getOrCreateAuthUser(email, DEMO_PASSWORD);
 
-      await setDoc(doc(db, "user_accounts", uid), {
+      await db.collection("user_accounts").doc(uid).set({
         full_name: user.full_name,
         phone_number: normalizePhone(user.phone_number),
         status: user.status,
-        created_at: serverTimestamp(),
+        created_at: firebase.firestore.FieldValue.serverTimestamp(),
       });
       log(`✔ user_accounts/${uid} (${user.full_name}, ${user.status}) ${created ? "[สร้างใหม่]" : "[มีอยู่แล้ว]"}`, "ok");
 
       const { id, ...fields } = REQUEST_TEMPLATES[i];
-      await setDoc(doc(db, "pickup_requests", id), {
+      await db.collection("pickup_requests").doc(id).set({
         ...fields,
         user_id: uid,
         contact_name: user.full_name,
         contact_phone: normalizePhone(user.phone_number),
         photo_urls: [],
-        created_at: serverTimestamp(),
+        created_at: firebase.firestore.FieldValue.serverTimestamp(),
       });
       log(`✔ pickup_requests/${id} → user_id: ${uid} (${fields.status})`, "ok");
 
-      await signOut(auth);
+      await auth.signOut();
     }
 
     const adminEmail = adminIdToEmail(ADMIN.login_identifier);
     const { uid: adminUid, created: adminCreated } = await getOrCreateAuthUser(adminEmail, DEMO_PASSWORD);
-    await setDoc(doc(db, "admin_accounts", adminUid), {
+    await db.collection("admin_accounts").doc(adminUid).set({
       full_name: ADMIN.full_name,
       login_identifier: ADMIN.login_identifier,
     });
     log(`✔ admin_accounts/${adminUid} (${ADMIN.full_name}) ${adminCreated ? "[สร้างใหม่]" : "[มีอยู่แล้ว]"}`, "ok");
-    await signOut(auth);
+    await auth.signOut();
 
     log(`เสร็จสิ้น — login ทดสอบด้วยเบอร์โทรของ user ด้านบน + password "${DEMO_PASSWORD}"`, "ok");
   } catch (err) {

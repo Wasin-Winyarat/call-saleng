@@ -1,10 +1,3 @@
-import { db, auth } from "../firebase-config.js";
-import { phoneToEmail } from "../auth-helpers.js";
-import {
-  signInWithEmailAndPassword, signOut,
-} from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
-
 const form = document.getElementById("loginForm");
 const submitBtn = document.getElementById("submitBtn");
 const errorBanner = document.getElementById("errorBanner");
@@ -60,17 +53,17 @@ form.addEventListener("submit", async (e) => {
   submitBtn.textContent = "กำลังเข้าสู่ระบบ...";
 
   try {
-    const credential = await signInWithEmailAndPassword(auth, phoneToEmail(phone), password);
-    const profileSnap = await getDoc(doc(db, "user_accounts", credential.user.uid));
+    const credential = await auth.signInWithEmailAndPassword(phoneToEmail(phone), password);
+    const profileSnap = await db.collection("user_accounts").doc(credential.user.uid).get();
 
-    if (profileSnap.exists() && profileSnap.data().status === "suspended") {
-      await signOut(auth);
+    if (profileSnap.exists && profileSnap.data().status === "suspended") {
+      await auth.signOut();
       showError("บัญชีนี้ถูกระงับการใช้งาน กรุณาติดต่อผู้ดูแลระบบ");
       return;
     }
 
     showToast("เข้าสู่ระบบสำเร็จ");
-    window.location.href = "../pickup-request/";
+    window.location.href = "../pickup-request/index.html";
   } catch (err) {
     console.error(err);
     showError(AUTH_ERROR_MESSAGE[err.code] || "เข้าสู่ระบบไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
