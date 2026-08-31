@@ -63,7 +63,7 @@ form.addEventListener("submit", async (e) => {
     }
 
     showToast("เข้าสู่ระบบสำเร็จ");
-    window.location.href = "../pickup-request/index.html";
+    window.location.href = "../dashboard/index.html";
   } catch (err) {
     console.error(err);
     showError(AUTH_ERROR_MESSAGE[err.code] || "เข้าสู่ระบบไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");

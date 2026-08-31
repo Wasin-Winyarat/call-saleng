@@ -1,0 +1,64 @@
+/* Green Saleng — user dashboard
+   Tokens ตาม docs/02-design/01-prototypes/DESIGN.md */
+
+:root {
+  --color-primary-700: #1F5C3D;
+  --color-primary-600: #2F7A4D;
+  --color-primary-100: #DCEEE1;
+  --color-accent-peach-100: #FDE9D9;
+  --color-accent-blue-100: #E3F0FB;
+  --color-accent-amber-500: #E8A33D;
+  --color-neutral-bg: #FAF9F6;
+  --color-neutral-card: #FFFFFF;
+  --color-neutral-300: #E5E4DF;
+  --color-text-primary: #2B2E2C;
+  --color-text-secondary: #7A7F7A;
+  --color-danger: #D97757;
+  --radius-md: 16px;
+  --radius-lg: 22px;
+  --radius-full: 999px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--color-neutral-bg);
+  font-family: 'Noto Sans Thai', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color: var(--color-text-primary);
+  line-height: 1.5;
+}
+
+.page { max-width: 480px; margin: 0 auto; padding: 28px 20px 64px; }
+
+.topbar { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; }
+.topbar-avatar {
+  width: 48px; height: 48px; border-radius: var(--radius-full); flex-shrink: 0;
+  background: var(--color-primary-100); display: flex; align-items: center; justify-content: center; font-size: 22px;
+}
+.topbar-body { flex: 1; min-width: 0; }
+.topbar-greeting { font-size: 16px; font-weight: 700; }
+.topbar-points {
+  display: inline-flex; align-items: center; gap: 4px; margin-top: 2px;
+  font-size: 12px; font-weight: 700; color: var(--color-accent-amber-500);
+}
+.topbar-logout { font-size: 13px; color: var(--color-primary-600); font-weight: 600; text-decoration: none; flex-shrink: 0; }
+
+.nav-card-list { display: flex; flex-direction: column; gap: 14px; margin-top: 28px; }
+.nav-card {
+  display: flex; align-items: center; gap: 14px;
+  background: var(--color-neutral-card); border-radius: var(--radius-md);
+  padding: 18px; text-decoration: none; color: var(--color-text-primary);
+  border: 1px solid var(--color-neutral-300);
+}
+.nav-card-icon {
+  width: 52px; height: 52px; border-radius: var(--radius-md); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 24px;
+}
+.nav-card-icon.tint-green { background: var(--color-primary-100); }
+.nav-card-icon.tint-blue { background: var(--color-accent-blue-100); }
+.nav-card-icon.tint-peach { background: var(--color-accent-peach-100); }
+.nav-card-body { flex: 1; min-width: 0; }
+.nav-card-title { font-size: 16px; font-weight: 700; margin-bottom: 2px; }
+.nav-card-desc { font-size: 13px; color: var(--color-text-secondary); }
+.nav-card-chevron { color: var(--color-text-secondary); font-size: 18px; flex-shrink: 0; }

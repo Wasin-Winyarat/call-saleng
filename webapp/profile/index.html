@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>โปรไฟล์ — กรีนซาเล้ง</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<!-- เปิดไฟล์นี้ตรงๆ (double-click) ได้เลย ไม่ต้องรัน server -->
+<body>
+<div class="page">
+  <div class="topbar">
+    <a class="back-chevron" href="../dashboard/index.html">←</a>
+    <div class="topbar-title">โปรไฟล์ของฉัน</div>
+  </div>
+
+  <div class="points-banner">
+    <div>
+      <div class="points-banner-label">แต้มสะสม</div>
+      <div class="points-banner-value">⭐ <span id="pointsValue">0</span></div>
+    </div>
+    <div style="font-size:12px; opacity:.85; text-align:right;">ตัวอย่าง (mockup)<br>ยังไม่ผูกกับการใช้งานจริง</div>
+  </div>
+
+  <div class="form-section accent-blue">
+    <div class="section-header">
+      <div class="section-icon tint-blue">👤</div>
+      <div class="section-title">ข้อมูลส่วนตัว</div>
+    </div>
+
+    <div class="field">
+      <label>ชื่อ-นามสกุล</label>
+      <input type="text" id="full_name" placeholder="ชื่อ-นามสกุล">
+    </div>
+    <div class="field">
+      <label>เบอร์โทรศัพท์</label>
+      <input type="tel" id="phone_number" placeholder="08X-XXX-XXXX">
+      <div class="hint">การแก้ไขเบอร์นี้ไม่มีผลกับเบอร์ที่ใช้เข้าสู่ระบบ</div>
+    </div>
+    <div class="field">
+      <label>อีเมล (ไม่บังคับ)</label>
+      <input type="email" id="email" placeholder="example@email.com">
+    </div>
+
+    <button type="button" class="btn btn-primary" id="saveProfileBtn">บันทึกข้อมูล</button>
+  </div>
+
+  <div class="form-section accent-green">
+    <div class="section-header">
+      <div class="section-icon tint-green">📍</div>
+      <div class="section-title">ที่อยู่ที่บันทึกไว้</div>
+    </div>
+    <div style="font-size:13px; color:var(--color-text-secondary); margin-top:-6px; margin-bottom:14px;">
+      บันทึกได้สูงสุด 2 ที่ — ใช้เลือกตอนส่งคำร้องได้เลยไม่ต้องกรอกใหม่
+    </div>
+
+    <div class="address-card-list" id="addressCardList"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script src="../firebase-config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

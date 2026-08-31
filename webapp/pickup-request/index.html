@@ -11,100 +11,111 @@
 <!-- เปิดไฟล์นี้ตรงๆ (double-click) ได้เลย ไม่ต้องรัน server -->
 <body>
 <div class="page">
-  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
-    <h1 class="h1" style="margin-bottom:0;">ส่งคำขอเรียกรถซาเล้ง</h1>
-    <div id="userBar" style="font-size:13px; text-align:right;"></div>
+  <div style="display:flex; align-items:center; gap:10px; margin-bottom:4px;">
+    <a href="../dashboard/index.html" style="text-decoration:none; color:var(--color-text-primary); font-size:20px; flex-shrink:0;">←</a>
+    <h1 class="h1" style="margin-bottom:0; flex:1;">ส่งคำขอเรียกรถซาเล้ง</h1>
+    <div id="userBar" style="font-size:13px; text-align:right; flex-shrink:0;"></div>
   </div>
   <div class="text-secondary">โมดูลตัวอย่าง — กรอกข้อมูลนัดหมาย บันทึกลง Firestore จริง (collection <code>pickup_requests</code>)</div>
 
   <form class="card" id="requestForm" novalidate>
-    <div class="h2">ผู้ติดต่อ</div>
-    <div class="text-secondary" style="margin-top:-8px; margin-bottom:14px;">
-      ดึงค่าเริ่มต้นจากบัญชีที่ login แก้ไขได้ (เก็บเป็น snapshot แยกจาก user_account ตาม database-schema.md)
-    </div>
 
-    <div class="field" id="field-contact_name">
-      <label>ชื่อผู้ติดต่อ <span class="req">*</span></label>
-      <input type="text" id="contact_name" placeholder="เช่น สมหญิง ใจงาม">
-      <div class="error-text">กรุณากรอกชื่อผู้ติดต่อ</div>
-    </div>
-
-    <div class="field" id="field-contact_phone">
-      <label>เบอร์โทรติดต่อ <span class="req">*</span></label>
-      <input type="tel" id="contact_phone" placeholder="08X-XXX-XXXX">
-      <div class="error-text">กรุณากรอกเบอร์โทรให้ถูกต้อง</div>
-    </div>
-
-    <div class="h2" style="margin-top:8px;">ที่อยู่ที่ต้องการให้เข้ารับ</div>
-
-    <div class="field" id="field-sub_district">
-      <label>ตำบล/พื้นที่ <span class="req">*</span></label>
-      <select id="sub_district">
-        <option value="">เลือกพื้นที่</option>
-        <option value="รอบเวียง">รอบเวียง</option>
-        <option value="เวียง">เวียง</option>
-        <option value="แม่ยาว">แม่ยาว</option>
-        <option value="นางแล">นางแล</option>
-        <option value="ริมกก">ริมกก</option>
-      </select>
-      <div class="hint">MVP รองรับเฉพาะเขตอำเภอเมือง จังหวัดเชียงราย</div>
-      <div class="error-text">กรุณาเลือกพื้นที่ในเขตให้บริการ</div>
-    </div>
-
-    <div class="field" id="field-address_text">
-      <label>รายละเอียดที่อยู่ <span class="req">*</span></label>
-      <textarea id="address_text" rows="2" placeholder="บ้านเลขที่ / ซอย / ถนน"></textarea>
-      <div class="error-text">กรุณากรอกรายละเอียดที่อยู่</div>
-    </div>
-
-    <div class="field">
-      <label>จุดสังเกต (ไม่บังคับ)</label>
-      <input type="text" id="landmark" placeholder="เช่น ตรงข้ามวัด...">
-    </div>
-
-    <div class="h2" style="margin-top:8px;">รายละเอียดขยะ</div>
-
-    <div class="field" id="field-waste_types">
-      <label>ประเภทขยะ (เลือกได้หลายอย่าง) <span class="req">*</span></label>
-      <div class="checkbox-grid" id="wasteTypeGrid">
-        <label class="checkbox-item"><input type="checkbox" value="กระดาษ"> กระดาษ</label>
-        <label class="checkbox-item"><input type="checkbox" value="พลาสติก"> พลาสติก</label>
-        <label class="checkbox-item"><input type="checkbox" value="เหล็ก"> เหล็ก</label>
-        <label class="checkbox-item"><input type="checkbox" value="อลูมิเนียม"> อลูมิเนียม</label>
-        <label class="checkbox-item"><input type="checkbox" value="ขวดแก้ว"> ขวดแก้ว</label>
+    <div class="form-section accent-blue">
+      <div class="section-header">
+        <div class="section-icon tint-blue">👤</div>
+        <div class="section-title">ผู้ติดต่อ</div>
       </div>
-      <div class="error-text">กรุณาเลือกประเภทขยะอย่างน้อย 1 อย่าง</div>
-    </div>
-
-    <div class="field">
-      <label>ปริมาณโดยประมาณ</label>
-      <select id="estimated_quantity_description">
-        <option value="น้อย (<5 กก.)">น้อย (&lt;5 กก.)</option>
-        <option value="กลาง (5–15 กก.)" selected>กลาง (5–15 กก.)</option>
-        <option value="มาก (>15 กก.)">มาก (&gt;15 กก.)</option>
-      </select>
-    </div>
-
-    <div class="h2" style="margin-top:8px;">วันเวลาที่ต้องการให้เข้ารับ</div>
-
-    <div class="field" id="field-requested_date">
-      <label>วันที่ <span class="req">*</span></label>
-      <input type="date" id="requested_date">
-      <div class="error-text">กรุณาเลือกวันที่</div>
-    </div>
-
-    <div class="field" id="field-time_slot">
-      <label>ช่วงเวลา <span class="req">*</span></label>
-      <div class="radio-row" id="timeSlotRow">
-        <label class="radio-item"><input type="radio" name="time_slot" value="08:00-13:00" style="display:none;"> 08:00–13:00</label>
-        <label class="radio-item"><input type="radio" name="time_slot" value="13:00-18:00" style="display:none;"> 13:00–18:00</label>
+      <div class="text-secondary" style="margin-top:-6px; margin-bottom:14px;">
+        ดึงค่าเริ่มต้นจากบัญชีที่ login แก้ไขได้ (เก็บเป็น snapshot แยกจาก user_account ตาม database-schema.md)
       </div>
-      <div class="error-text">กรุณาเลือกช่วงเวลา</div>
+
+      <div class="field-row">
+        <div class="field" id="field-contact_name">
+          <label>ชื่อผู้ติดต่อ <span class="req">*</span></label>
+          <input type="text" id="contact_name" placeholder="เช่น สมหญิง ใจงาม">
+          <div class="error-text">กรุณากรอกชื่อผู้ติดต่อ</div>
+        </div>
+
+        <div class="field" id="field-contact_phone">
+          <label>เบอร์โทรติดต่อ <span class="req">*</span></label>
+          <input type="tel" id="contact_phone" placeholder="08X-XXX-XXXX">
+          <div class="error-text">กรุณากรอกเบอร์โทรให้ถูกต้อง</div>
+        </div>
+      </div>
     </div>
 
-    <div class="field">
-      <label>หมายเหตุเพิ่มเติม (ไม่บังคับ)</label>
-      <textarea id="notes" rows="3" placeholder="เช่น ฝากไว้ที่รปภ. / ช่วยโทรก่อนถึง 10 นาที"></textarea>
+    <div class="form-section accent-green">
+      <div class="section-header">
+        <div class="section-icon tint-green">📍</div>
+        <div class="section-title">ที่อยู่ที่ต้องการให้เข้ารับ</div>
+      </div>
+      <div class="text-secondary" style="margin-top:-6px; margin-bottom:14px;">
+        เลือกที่อยู่ที่บันทึกไว้ — จัดการ (เพิ่ม/แก้ไข) ได้ที่ <a href="../profile/index.html" style="color:var(--color-primary-600); font-weight:600;">โปรไฟล์</a>
+      </div>
+
+      <div class="address-card-list" id="addressCardList"></div>
+      <div class="error-text" id="addressError" style="display:none; margin-top:8px;">กรุณาเลือกที่อยู่ก่อนส่งคำขอ (ยังไม่มีที่อยู่บันทึกไว้ — ไปเพิ่มที่โปรไฟล์ก่อน)</div>
+    </div>
+
+    <div class="form-section accent-peach">
+      <div class="section-header">
+        <div class="section-icon tint-peach">♻️</div>
+        <div class="section-title">รายละเอียดขยะ</div>
+      </div>
+
+      <div class="field" id="field-waste_types">
+        <label>ประเภทขยะ (เลือกได้หลายอย่าง) <span class="req">*</span></label>
+        <div class="checkbox-grid" id="wasteTypeGrid">
+          <label class="checkbox-item"><input type="checkbox" value="กระดาษ"> กระดาษ</label>
+          <label class="checkbox-item"><input type="checkbox" value="พลาสติก"> พลาสติก</label>
+          <label class="checkbox-item"><input type="checkbox" value="เหล็ก"> เหล็ก</label>
+          <label class="checkbox-item"><input type="checkbox" value="อลูมิเนียม"> อลูมิเนียม</label>
+          <label class="checkbox-item"><input type="checkbox" value="ขวดแก้ว"> ขวดแก้ว</label>
+        </div>
+        <div class="error-text">กรุณาเลือกประเภทขยะอย่างน้อย 1 อย่าง</div>
+      </div>
+
+      <div class="field">
+        <label>ปริมาณโดยประมาณ</label>
+        <select id="estimated_quantity_description">
+          <option value="น้อย (<5 กก.)">น้อย (&lt;5 กก.)</option>
+          <option value="กลาง (5–15 กก.)" selected>กลาง (5–15 กก.)</option>
+          <option value="มาก (>15 กก.)">มาก (&gt;15 กก.)</option>
+        </select>
+      </div>
+
+      <div class="field" style="margin-bottom:0; opacity:.55;">
+        <label>รูปถ่ายขยะ (ไม่บังคับ สูงสุด 5 รูป)</label>
+        <input type="file" accept="image/*" multiple disabled>
+        <div class="hint">🚧 ยังใช้งานไม่ได้ — รอสร้าง database สำหรับเก็บภาพ (เร็วๆนี้)</div>
+      </div>
+    </div>
+
+    <div class="form-section accent-blue">
+      <div class="section-header">
+        <div class="section-icon tint-blue">🗓️</div>
+        <div class="section-title">วันเวลาที่ต้องการให้เข้ารับ</div>
+      </div>
+
+      <div class="field" id="field-requested_date">
+        <label>วันที่ <span class="req">*</span></label>
+        <input type="date" id="requested_date">
+        <div class="error-text">กรุณาเลือกวันที่</div>
+      </div>
+
+      <div class="field" id="field-time_slot">
+        <label>ช่วงเวลา <span class="req">*</span></label>
+        <div class="radio-row" id="timeSlotRow">
+          <label class="radio-item"><input type="radio" name="time_slot" value="08:00-13:00" style="display:none;"> 08:00–13:00</label>
+          <label class="radio-item"><input type="radio" name="time_slot" value="13:00-18:00" style="display:none;"> 13:00–18:00</label>
+        </div>
+        <div class="error-text">กรุณาเลือกช่วงเวลา</div>
+      </div>
+
+      <div class="field" style="margin-bottom:0;">
+        <label>หมายเหตุเพิ่มเติม (ไม่บังคับ)</label>
+        <textarea id="notes" rows="3" placeholder="เช่น ฝากไว้ที่รปภ. / ช่วยโทรก่อนถึง 10 นาที"></textarea>
+      </div>
     </div>
 
     <button type="submit" class="btn btn-primary" id="submitBtn" disabled>ส่งคำขอ</button>

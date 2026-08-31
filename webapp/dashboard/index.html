@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>หน้าหลัก — กรีนซาเล้ง</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<!-- เปิดไฟล์นี้ตรงๆ (double-click) ได้เลย ไม่ต้องรัน server -->
+<body>
+<div class="page">
+  <div class="topbar">
+    <div class="topbar-avatar">🙂</div>
+    <div class="topbar-body">
+      <div class="topbar-greeting">สวัสดี <span id="greetingName">...</span></div>
+      <div class="topbar-points">⭐ <span id="pointsValue">0</span> แต้มสะสม</div>
+    </div>
+    <a class="topbar-logout" href="#" id="logoutLink">ออกจากระบบ</a>
+  </div>
+
+  <div class="nav-card-list">
+    <a class="nav-card" href="../profile/index.html">
+      <div class="nav-card-icon tint-blue">👤</div>
+      <div class="nav-card-body">
+        <div class="nav-card-title">โปรไฟล์ของฉัน</div>
+        <div class="nav-card-desc">ที่อยู่ที่บันทึกไว้ · ข้อมูลส่วนตัว · แต้มสะสม</div>
+      </div>
+      <div class="nav-card-chevron">›</div>
+    </a>
+
+    <a class="nav-card" href="../pickup-request/index.html">
+      <div class="nav-card-icon tint-green">📝</div>
+      <div class="nav-card-body">
+        <div class="nav-card-title">ส่งคำร้อง</div>
+        <div class="nav-card-desc">เรียกรถซาเล้งมารับขยะรีไซเคิลที่บ้าน</div>
+      </div>
+      <div class="nav-card-chevron">›</div>
+    </a>
+
+    <a class="nav-card" href="../tracking/index.html">
+      <div class="nav-card-icon tint-blue">📦</div>
+      <div class="nav-card-body">
+        <div class="nav-card-title">ติดตามคำขอ</div>
+        <div class="nav-card-desc">ดูสถานะคำขอที่ส่งไปแล้ว · แชทกับ Admin</div>
+      </div>
+      <div class="nav-card-chevron">›</div>
+    </a>
+
+    <a class="nav-card" href="../prices/index.html">
+      <div class="nav-card-icon tint-peach">💰</div>
+      <div class="nav-card-body">
+        <div class="nav-card-title">ราคาขยะ</div>
+        <div class="nav-card-desc">เช็คราคารับซื้อขยะรีไซเคิลล่าสุด</div>
+      </div>
+      <div class="nav-card-chevron">›</div>
+    </a>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script src="../firebase-config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

@@ -66,7 +66,7 @@ form.addEventListener("submit", async (e) => {
     });
 
     showToast("สมัครเข้าใช้งานสำเร็จ");
-    window.location.href = "../pickup-request/index.html";
+    window.location.href = "../dashboard/index.html";
   } catch (err) {
     console.error(err);
     showError(AUTH_ERROR_MESSAGE[err.code] || "สมัครเข้าใช้งานไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");

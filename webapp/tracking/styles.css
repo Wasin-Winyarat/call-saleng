@@ -1,0 +1,91 @@
+/* Green Saleng — ติดตามคำขอของฉัน
+   Tokens ตาม docs/02-design/01-prototypes/DESIGN.md */
+
+:root {
+  --color-primary-700: #1F5C3D;
+  --color-primary-600: #2F7A4D;
+  --color-primary-100: #DCEEE1;
+  --color-accent-peach-100: #FDE9D9;
+  --color-neutral-bg: #FAF9F6;
+  --color-neutral-card: #FFFFFF;
+  --color-neutral-300: #E5E4DF;
+  --color-text-primary: #2B2E2C;
+  --color-text-secondary: #7A7F7A;
+  --color-danger: #D97757;
+  --radius-md: 16px;
+  --radius-full: 999px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--color-neutral-bg);
+  font-family: 'Noto Sans Thai', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color: var(--color-text-primary);
+  line-height: 1.5;
+}
+
+.page { max-width: 480px; margin: 0 auto; padding: 28px 20px 64px; }
+
+.topbar { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; }
+.back-chevron {
+  width: 40px; height: 40px; border-radius: var(--radius-full);
+  background: var(--color-neutral-card); border: 1px solid var(--color-neutral-300);
+  display: flex; align-items: center; justify-content: center; font-size: 18px;
+  text-decoration: none; color: var(--color-text-primary); flex-shrink: 0;
+}
+.topbar-title { font-size: 20px; font-weight: 700; }
+.text-secondary { color: var(--color-text-secondary); font-size: 13px; margin: 8px 0 20px; }
+
+.empty-note { text-align: center; color: var(--color-text-secondary); font-size: 14px; padding: 40px 0; }
+.empty-note a { color: var(--color-primary-600); font-weight: 600; }
+
+/* ---------- request card ---------- */
+.request-card {
+  background: var(--color-neutral-card); border-radius: var(--radius-md);
+  border: 1px solid var(--color-neutral-300); padding: 14px; margin-bottom: 12px;
+}
+.request-card-top { display: flex; gap: 12px; }
+.request-card-thumb {
+  width: 44px; height: 44px; border-radius: var(--radius-md); flex-shrink: 0;
+  background: var(--color-primary-100); display: flex; align-items: center; justify-content: center; font-size: 20px;
+}
+.request-card-body { flex: 1; min-width: 0; }
+.request-card-title { font-weight: 700; font-size: 14px; margin-bottom: 3px; }
+.request-card-meta { font-size: 13px; color: var(--color-text-secondary); margin-bottom: 2px; }
+
+.status-pill {
+  display: inline-flex; align-items: center; font-size: 11px; font-weight: 700;
+  padding: 3px 10px; border-radius: var(--radius-full); margin-top: 4px;
+}
+.status-pill.pending_admin_review { background: var(--color-accent-peach-100); color: #8A5A15; }
+.status-pill.open_for_saleng { background: #E3F0FB; color: #1F5C7A; }
+.status-pill.pending_match_confirm { background: var(--color-neutral-300); color: var(--color-text-secondary); }
+.status-pill.confirmed { background: var(--color-primary-100); color: var(--color-primary-700); }
+.status-pill.completed { background: var(--color-primary-100); color: var(--color-primary-700); }
+.status-pill.cancelled { background: #FBEBE3; color: var(--color-danger); }
+
+/* ---------- chat thread ---------- */
+.chat-toggle {
+  margin-top: 10px; font-size: 13px; font-weight: 600; color: var(--color-primary-600);
+  background: none; border: none; cursor: pointer; padding: 4px 0; font-family: inherit;
+}
+.chat-panel { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--color-neutral-300); }
+.chat-panel.open { display: block; }
+.chat-messages { max-height: 180px; overflow-y: auto; margin-bottom: 8px; display: flex; flex-direction: column; gap: 6px; }
+.chat-bubble { max-width: 80%; padding: 8px 12px; border-radius: var(--radius-md); font-size: 13px; }
+.chat-bubble.mine { align-self: flex-end; background: var(--color-primary-600); color: #fff; }
+.chat-bubble.theirs { align-self: flex-start; background: var(--color-neutral-bg); border: 1px solid var(--color-neutral-300); }
+.chat-bubble .who { font-size: 10px; opacity: .8; margin-bottom: 2px; }
+.chat-empty { font-size: 12px; color: var(--color-text-secondary); text-align: center; padding: 8px 0; }
+.chat-input-row { display: flex; gap: 8px; }
+.chat-input-row input {
+  flex: 1; padding: 8px 12px; border-radius: var(--radius-full);
+  border: 1.5px solid var(--color-neutral-300); font-size: 13px; font-family: inherit;
+}
+.chat-input-row input:focus { outline: none; border-color: var(--color-primary-600); }
+.chat-input-row button {
+  border: none; background: var(--color-primary-600); color: #fff; border-radius: var(--radius-full);
+  padding: 8px 16px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit;
+}
