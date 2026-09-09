@@ -28,3 +28,6 @@ secrets.json
 
 # Claude Code local settings (permission เฉพาะเครื่อง ไม่ใช่ของทีม)
 .claude/settings.local.json
+
+# Firebase CLI local deploy cache (สร้างอัตโนมัติตอนรัน firebase deploy เฉพาะเครื่อง)
+.firebase/
