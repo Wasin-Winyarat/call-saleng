@@ -9,6 +9,8 @@ const addressError = document.getElementById("addressError");
 
 const ADDRESS_SLOTS = ["address_1", "address_2"];
 
+const editRequestId = new URLSearchParams(window.location.search).get("edit");
+
 let currentUserId = null;
 let currentProfile = null;
 let savedAddresses = { address_1: null, address_2: null }; // เก็บใน Firestore collection user_addresses/{uid} — จัดการ (เพิ่ม/แก้ไข) ที่หน้าโปรไฟล์
@@ -71,9 +73,55 @@ auth.onAuthStateChanged(async (user) => {
     console.error("โหลดที่อยู่ที่บันทึกไว้ไม่สำเร็จ", err);
   }
 
+  if (editRequestId && !(await loadRequestForEdit())) return;
+
   renderAddressCards();
   validate();
 });
+
+// ---------- โหมดแก้ไขคำขอเดิม (?edit=<request_id>) — แก้ไขได้เฉพาะคำขอของตัวเองที่ยัง pending_admin_review ----------
+async function loadRequestForEdit() {
+  try {
+    const reqSnap = await db.collection("pickup_requests").doc(editRequestId).get();
+    const data = reqSnap.data();
+    if (!reqSnap.exists || data.user_id !== currentUserId || data.status !== "pending_admin_review") {
+      showToast("ไม่พบคำขอนี้ หรือ Admin ตรวจสอบคำขอนี้ไปแล้ว แก้ไขไม่ได้", true);
+      window.location.href = "../tracking/index.html";
+      return false;
+    }
+
+    document.getElementById("contact_name").value = data.contact_name || "";
+    document.getElementById("contact_phone").value = data.contact_phone || "";
+    document.getElementById("notes").value = data.notes || "";
+    document.getElementById("estimated_quantity_description").value = data.estimated_quantity_description || "";
+    document.getElementById("requested_date").value = data.requested_date || "";
+
+    wasteTypeGrid.querySelectorAll(".checkbox-item").forEach((item) => {
+      const input = item.querySelector("input");
+      input.checked = (data.waste_types || []).includes(input.value);
+      item.classList.toggle("checked", input.checked);
+    });
+
+    timeSlotRow.querySelectorAll(".radio-item").forEach((item) => {
+      const input = item.querySelector("input");
+      input.checked = input.value === data.time_slot;
+      item.classList.toggle("checked", input.checked);
+    });
+
+    if (data.saved_address_id && savedAddresses[data.saved_address_id]) {
+      selectedSlot = data.saved_address_id;
+    }
+
+    document.getElementById("pageTitle").textContent = "แก้ไขคำขอเรียกรถซาเล้ง";
+    submitBtn.textContent = "บันทึกการแก้ไข";
+    return true;
+  } catch (err) {
+    console.error(err);
+    showToast("โหลดคำขอเดิมไม่สำเร็จ", true);
+    window.location.href = "../tracking/index.html";
+    return false;
+  }
+}
 
 function applyProfileAutofill() {
   if (!currentProfile) return;
@@ -192,14 +240,11 @@ form.addEventListener("submit", async (e) => {
   }
 
   submitBtn.disabled = true;
-  submitBtn.textContent = "กำลังส่งคำขอ...";
+  submitBtn.textContent = editRequestId ? "กำลังบันทึก..." : "กำลังส่งคำขอ...";
 
   try {
-    const requestRef = db.collection("pickup_requests").doc();
     const address = savedAddresses[selectedSlot];
-
-    await requestRef.set({
-      user_id: currentUserId,
+    const payload = {
       contact_name: fieldValue("contact_name"),
       contact_phone: fieldValue("contact_phone"),
       saved_address_id: selectedSlot,
@@ -211,6 +256,18 @@ form.addEventListener("submit", async (e) => {
       estimated_quantity_description: document.getElementById("estimated_quantity_description").value,
       requested_date: fieldValue("requested_date"),
       time_slot: getTimeSlot(),
+    };
+
+    if (editRequestId) {
+      await db.collection("pickup_requests").doc(editRequestId).update(payload);
+      showToast("บันทึกการแก้ไขสำเร็จ");
+      window.location.href = "../tracking/index.html";
+      return;
+    }
+
+    await db.collection("pickup_requests").doc().set({
+      ...payload,
+      user_id: currentUserId,
       status: "pending_admin_review",
       created_at: firebase.firestore.FieldValue.serverTimestamp(),
     });
@@ -220,11 +277,11 @@ form.addEventListener("submit", async (e) => {
   } catch (err) {
     console.error(err);
     const message = err.code === "permission-denied"
-      ? "ส่งคำขอไม่สำเร็จ: Firestore ปฏิเสธสิทธิ์ — ตั้งค่า Security Rules ก่อน (ดู README)"
-      : "ส่งคำขอไม่สำเร็จ กรุณาลองใหม่อีกครั้ง";
+      ? `${editRequestId ? "บันทึกการแก้ไข" : "ส่งคำขอ"}ไม่สำเร็จ: Firestore ปฏิเสธสิทธิ์ — ตั้งค่า Security Rules ก่อน (ดู README)`
+      : `${editRequestId ? "บันทึกการแก้ไข" : "ส่งคำขอ"}ไม่สำเร็จ กรุณาลองใหม่อีกครั้ง`;
     showToast(message, true);
   } finally {
-    submitBtn.textContent = "ส่งคำขอ";
+    submitBtn.textContent = editRequestId ? "บันทึกการแก้ไข" : "ส่งคำขอ";
     validate();
   }
 });

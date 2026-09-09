@@ -18,6 +18,6 @@
 
 ## หมายเหตุ
 
-- Business rules ใหม่ 2 ข้อ (cancel ต้องมีเหตุผล, admin เปลี่ยนเวลาได้ทันที) ถูกเพิ่มเข้า spec แล้วที่ [docs/01-requirements/01-spec/20260819-001-saleng-pickup-request.md](docs/01-requirements/01-spec/20260819-001-saleng-pickup-request.md)
-- ยังไม่ได้ปรับ [docs/02-design/02-technical/database-schema.md](docs/02-design/02-technical/database-schema.md) และโค้ดจริงใน [webapp/admin/dashboard/app.js](webapp/admin/dashboard/app.js) ให้ตรงกับ business rule ใหม่ (รอทำต่อ)
+- Business rules ใหม่ 2 ข้อ (cancel ต้องมีเหตุผล, admin เปลี่ยนเวลาได้ทันที) ถูกเพิ่มเข้า spec แล้วที่ [docs/01-requirements/01-spec/20260819-001-saleng-pickup-request.md](docs/01-requirements/01-spec/20260819-001-saleng-pickup-request.md) — ทั้งคู่ implement แล้วใน [webapp/admin/dashboard/app.js](webapp/admin/dashboard/app.js) (ปุ่ม Reject บังคับกรอก `cancel_reason` ก่อนกดยืนยัน + ปุ่ม "แก้ไขวัน-เวลานัดรับ" แยกต่างหากที่ไม่เปลี่ยน `status`) ตรงกับ [docs/02-design/02-technical/database-schema.md](docs/02-design/02-technical/database-schema.md) อยู่แล้ว
+- เพิ่มปุ่ม เพิ่ม/แก้ไข/ลบ ให้ครบ 3 จุด: ที่อยู่ที่บันทึกไว้ ([webapp/profile/app.js](webapp/profile/app.js)), คำขอของ user เอง — แก้ไข/ลบได้เฉพาะตอนยัง `pending_admin_review` ([webapp/tracking/app.js](webapp/tracking/app.js), [webapp/pickup-request/app.js](webapp/pickup-request/app.js) โหมด `?edit=`), และฝั่ง admin ตามข้อข้างบน
 - `request_match` (ตารางจับคู่งานกับสาเล้ง) ยังไม่ต้องสร้าง เพราะ module รอบนี้ตัดฝั่งสาเล้งออก

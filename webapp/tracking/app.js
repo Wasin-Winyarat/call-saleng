@@ -8,6 +8,7 @@ const STATUS_LABEL = {
 };
 
 const requestList = document.getElementById("requestList");
+const toast = document.getElementById("toast");
 const subscribedChats = new Set();
 let currentUserId = null;
 
@@ -15,6 +16,13 @@ function escapeHtml(str) {
   const div = document.createElement("div");
   div.textContent = str || "";
   return div.innerHTML;
+}
+
+function showToast(message, isError = false) {
+  toast.textContent = message;
+  toast.classList.toggle("error", isError);
+  toast.classList.add("show");
+  setTimeout(() => toast.classList.remove("show"), 3200);
 }
 
 // ---------- auth guard ----------
@@ -75,8 +83,36 @@ function renderRequestCard(id, data) {
   top.appendChild(thumb);
   top.appendChild(body);
   card.appendChild(top);
+
+  if (data.status === "pending_admin_review") {
+    card.appendChild(buildOwnerActions(id));
+  }
+
   card.appendChild(buildChatSection(id));
   return card;
+}
+
+// ---------- แก้ไข/ลบคำขอของตัวเอง — ทำได้เฉพาะตอนยัง "รอ Admin ตรวจสอบ" เท่านั้น ----------
+function buildOwnerActions(id) {
+  const row = document.createElement("div");
+  row.className = "action-row";
+  row.innerHTML = `
+    <a class="btn btn-secondary" href="../pickup-request/index.html?edit=${id}">✏️ แก้ไข</a>
+    <button type="button" class="btn btn-danger" id="delete-request-${id}">🗑️ ลบ</button>
+  `;
+
+  row.querySelector(`#delete-request-${id}`).addEventListener("click", async () => {
+    if (!window.confirm("ลบคำขอนี้? การลบไม่สามารถย้อนกลับได้")) return;
+    try {
+      await db.collection("pickup_requests").doc(id).delete();
+      showToast("ลบคำขอแล้ว");
+    } catch (err) {
+      console.error(err);
+      showToast("ลบคำขอไม่สำเร็จ", true);
+    }
+  });
+
+  return row;
 }
 
 // ---------- chat thread ต่อคำขอ (chat_messages, sender_role: "user") ----------

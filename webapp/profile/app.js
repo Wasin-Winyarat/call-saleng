@@ -137,8 +137,28 @@ function buildAddressCard(slot) {
     renderAddressCards();
   });
 
+  const deleteBtn = document.createElement("button");
+  deleteBtn.type = "button";
+  deleteBtn.className = "address-card-delete-btn";
+  deleteBtn.textContent = "🗑️";
+  deleteBtn.addEventListener("click", async () => {
+    if (!window.confirm(`ลบ${addressLabel(slot)}นี้?`)) return;
+    try {
+      await db.collection("user_addresses").doc(currentUserId).update({
+        [slot]: firebase.firestore.FieldValue.delete(),
+      });
+      savedAddresses[slot] = null;
+      renderAddressCards();
+      showToast("ลบที่อยู่แล้ว");
+    } catch (err) {
+      console.error(err);
+      showToast("ลบที่อยู่ไม่สำเร็จ", true);
+    }
+  });
+
   card.appendChild(body);
   card.appendChild(editBtn);
+  card.appendChild(deleteBtn);
   return card;
 }
 

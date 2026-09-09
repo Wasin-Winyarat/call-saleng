@@ -16,6 +16,7 @@ const modalTitle = document.getElementById("modalTitle");
 const modalDesc = document.getElementById("modalDesc");
 const modalConfirmBtn = document.getElementById("modalConfirmBtn");
 const modalCancelBtn = document.getElementById("modalCancelBtn");
+const modalReasonInput = document.getElementById("modalReasonInput");
 
 let currentAdminUid = null;
 let currentAdminName = "";
@@ -178,29 +179,91 @@ function buildDetail(id, data) {
     actionRow.className = "action-row";
     actionRow.innerHTML = `
       <button type="button" class="btn btn-primary" data-action="confirm">Confirm</button>
-      <button type="button" class="btn btn-danger" data-action="reject">Reject</button>
+      <button type="button" class="btn btn-danger" data-action="reject">ลบ / Reject</button>
     `;
     actionRow.querySelector('[data-action="confirm"]').addEventListener("click", () => openActionModal(id, "confirm"));
     actionRow.querySelector('[data-action="reject"]').addEventListener("click", () => openActionModal(id, "reject"));
     detail.appendChild(actionRow);
   }
 
+  // แก้ไขวัน-เวลานัดรับ: admin ทำได้ทันทีโดยไม่เปลี่ยน status ตาม business rule (ยกเว้นงานที่จบไปแล้ว)
+  if (data.status !== "cancelled" && data.status !== "completed") {
+    detail.appendChild(buildDateTimeEditor(id, data));
+  }
+
   detail.appendChild(buildChatSection(id));
   return detail;
 }
 
-// ---------- confirm / reject modal ----------
+// ---------- แก้ไขวัน-เวลานัดรับ (ไม่เปลี่ยนสถานะคำขอ) ----------
+function buildDateTimeEditor(id, data) {
+  const wrap = document.createElement("div");
+  wrap.className = "datetime-editor";
+  wrap.innerHTML = `
+    <button type="button" class="btn btn-secondary datetime-toggle">🗓️ แก้ไขวัน-เวลานัดรับ</button>
+    <div class="datetime-form">
+      <input type="date" class="dt-date" value="${data.requested_date || ""}">
+      <div class="datetime-slot-row">
+        <label><input type="radio" name="dt-slot-${id}" class="dt-slot" value="08:00-13:00" ${data.time_slot === "08:00-13:00" ? "checked" : ""}> 08:00–13:00</label>
+        <label><input type="radio" name="dt-slot-${id}" class="dt-slot" value="13:00-18:00" ${data.time_slot === "13:00-18:00" ? "checked" : ""}> 13:00–18:00</label>
+      </div>
+      <div class="action-row">
+        <button type="button" class="btn btn-primary dt-save">บันทึก</button>
+        <button type="button" class="btn btn-secondary dt-cancel">ปิด</button>
+      </div>
+    </div>
+  `;
+
+  const form = wrap.querySelector(".datetime-form");
+  wrap.querySelector(".datetime-toggle").addEventListener("click", () => form.classList.toggle("open"));
+  wrap.querySelector(".dt-cancel").addEventListener("click", () => form.classList.remove("open"));
+
+  wrap.querySelector(".dt-save").addEventListener("click", async () => {
+    const newDate = wrap.querySelector(".dt-date").value;
+    const slotInput = wrap.querySelector(".dt-slot:checked");
+    if (!newDate || !slotInput) {
+      showToast("กรุณาเลือกวันที่และช่วงเวลาให้ครบ", true);
+      return;
+    }
+    try {
+      await db.collection("pickup_requests").doc(id).update({
+        requested_date: newDate,
+        time_slot: slotInput.value,
+      });
+      showToast("บันทึกวัน-เวลาใหม่แล้ว");
+      form.classList.remove("open");
+    } catch (err) {
+      console.error(err);
+      showToast("บันทึกไม่สำเร็จ — เช็ค Security Rules", true);
+    }
+  });
+
+  return wrap;
+}
+
+// ---------- confirm / reject (reject = ยกเลิกคำขอ ต้องกรอกเหตุผลก่อนเสมอ) modal ----------
 function openActionModal(requestId, action) {
   pendingAction = { requestId, action };
+  modalReasonInput.value = "";
   if (action === "confirm") {
     modalTitle.textContent = "ยืนยัน Confirm คำขอนี้?";
     modalDesc.textContent = "สถานะจะเปลี่ยนเป็น \"เปิดให้สาเล้งรับงาน\" ทันที";
+    modalReasonInput.style.display = "none";
   } else {
-    modalTitle.textContent = "ยืนยัน Reject คำขอนี้?";
-    modalDesc.textContent = "สถานะจะเปลี่ยนเป็น \"ยกเลิกแล้ว\" ทันที";
+    modalTitle.textContent = "ยืนยัน Reject/ลบคำขอนี้?";
+    modalDesc.textContent = "สถานะจะเปลี่ยนเป็น \"ยกเลิกแล้ว\" ทันที — ต้องระบุเหตุผลก่อนจึงจะยืนยันได้";
+    modalReasonInput.style.display = "block";
   }
+  updateModalConfirmState();
   confirmModal.classList.add("open");
 }
+
+function updateModalConfirmState() {
+  const needsReason = pendingAction && pendingAction.action === "reject";
+  modalConfirmBtn.disabled = needsReason && !modalReasonInput.value.trim();
+}
+
+modalReasonInput.addEventListener("input", updateModalConfirmState);
 
 modalCancelBtn.addEventListener("click", () => {
   confirmModal.classList.remove("open");
@@ -210,15 +273,27 @@ modalCancelBtn.addEventListener("click", () => {
 modalConfirmBtn.addEventListener("click", async () => {
   if (!pendingAction) return;
   const { requestId, action } = pendingAction;
-  const newStatus = action === "confirm" ? "open_for_saleng" : "cancelled";
+  const reason = modalReasonInput.value.trim();
+
+  if (action === "reject" && !reason) {
+    showToast("กรุณากรอกเหตุผลก่อนยืนยัน", true);
+    return;
+  }
 
   try {
-    await db.collection("pickup_requests").doc(requestId).update({
-      status: newStatus,
+    const updateData = {
+      status: action === "confirm" ? "open_for_saleng" : "cancelled",
       admin_reviewed_at: firebase.firestore.FieldValue.serverTimestamp(),
       admin_reviewed_by: currentAdminUid,
-    });
-    showToast(action === "confirm" ? "Confirm สำเร็จ" : "Reject สำเร็จ");
+    };
+    if (action === "reject") {
+      updateData.cancelled_at = firebase.firestore.FieldValue.serverTimestamp();
+      updateData.cancelled_by = "admin";
+      updateData.cancel_reason = reason;
+    }
+
+    await db.collection("pickup_requests").doc(requestId).update(updateData);
+    showToast(action === "confirm" ? "Confirm สำเร็จ" : "ลบ/Reject สำเร็จ");
   } catch (err) {
     console.error(err);
     showToast("ทำรายการไม่สำเร็จ — เช็ค Security Rules", true);

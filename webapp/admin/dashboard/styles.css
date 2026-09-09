@@ -97,8 +97,19 @@ h1.h1 { font-size: 24px; font-weight: 700; margin: 0; }
   font-size: 14px; font-weight: 700; border: none; cursor: pointer; font-family: inherit;
 }
 .btn-primary { background: var(--color-primary-600); color: #fff; }
+.btn-primary:disabled { background: var(--color-neutral-300); color: var(--color-text-secondary); cursor: not-allowed; }
 .btn-secondary { background: var(--color-neutral-card); color: var(--color-text-secondary); border: 1.5px solid var(--color-neutral-300); }
 .btn-danger { background: var(--color-danger); color: #fff; }
+
+/* --- แก้ไขวัน-เวลานัดรับ (admin) --- */
+.datetime-editor { margin-top: 14px; }
+.datetime-form { display: none; margin-top: 10px; }
+.datetime-form.open { display: block; }
+.datetime-form .dt-date {
+  width: 100%; padding: 10px 12px; border-radius: var(--radius-md);
+  border: 1.5px solid var(--color-neutral-300); font-size: 14px; font-family: inherit; margin-bottom: 10px;
+}
+.datetime-slot-row { display: flex; gap: 16px; font-size: 13px; margin-bottom: 10px; }
 
 /* --- chat thread (admin side) --- */
 .chat-section { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--color-neutral-300); }
@@ -129,6 +140,12 @@ h1.h1 { font-size: 24px; font-weight: 700; margin: 0; }
 .modal-box { background: var(--color-neutral-card); border-radius: var(--radius-md); padding: 22px 20px; width: 100%; max-width: 320px; }
 .modal-title { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
 .modal-desc { font-size: 14px; color: var(--color-text-secondary); margin-bottom: 18px; }
+.modal-reason {
+  width: 100%; min-height: 70px; padding: 10px 12px; border-radius: var(--radius-md);
+  border: 1.5px solid var(--color-neutral-300); font-size: 14px; font-family: inherit;
+  margin-bottom: 14px; resize: vertical;
+}
+.modal-reason:focus { outline: none; border-color: var(--color-primary-600); }
 .modal-actions { display: flex; flex-direction: column; gap: 8px; }
 
 .toast {

@@ -106,7 +106,7 @@ body {
 .address-card-body { flex: 1; min-width: 0; }
 .address-card-label { font-weight: 700; font-size: 14px; margin-bottom: 3px; display: flex; align-items: center; gap: 6px; }
 .address-card-text { font-size: 13px; color: var(--color-text-secondary); }
-.address-card-edit-btn {
+.address-card-edit-btn, .address-card-delete-btn {
   border: none; background: none; font-size: 16px; cursor: pointer; flex-shrink: 0; padding: 4px;
 }
 
