@@ -1,1 +1,30 @@
+# ห้าม commit secret key ใดๆ ลงโปรเจกต์นี้ (ดู CLAUDE.md > ข้อห้าม)
+# ข้อยกเว้นเดียว: webapp/firebase-config.js — apiKey ในนั้นเป็น client-side
+# public config ของ Firebase web app โดยเจตนา ไม่ใช่ secret จึง commit ได้ปกติ
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Firebase Admin SDK service account key
+# (ไฟล์ดาวน์โหลดจาก Firebase Console มักชื่อ <project>-firebase-adminsdk-xxxxx.json)
+*firebase-adminsdk*.json
+serviceAccountKey.json
+serviceAccount*.json
+service-account*.json
+
+# Credential/secret files ทั่วไป
+credentials.json
+secrets.json
+*credential*.json
+*secret*.json
+
+# Private key / certificate files
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Claude Code local settings (permission เฉพาะเครื่อง ไม่ใช่ของทีม)
 .claude/settings.local.json
