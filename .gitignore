@@ -20,6 +20,9 @@ secrets.json
 *credential*.json
 *secret*.json
 
+# OpenRouter API key (ใช้ร่วมกันโดย webapp/ai-test/ และ webapp/admin/dashboard/)
+webapp/ai-config.js
+
 # Private key / certificate files
 *.pem
 *.key

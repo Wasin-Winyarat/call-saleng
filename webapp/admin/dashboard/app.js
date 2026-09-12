@@ -17,14 +17,50 @@ const modalDesc = document.getElementById("modalDesc");
 const modalConfirmBtn = document.getElementById("modalConfirmBtn");
 const modalCancelBtn = document.getElementById("modalCancelBtn");
 const modalReasonInput = document.getElementById("modalReasonInput");
+const modalReasonDropdown = document.getElementById("modalReasonDropdown");
+const modalDraftReasonBtn = document.getElementById("modalDraftReasonBtn");
+const summarizeAllBtn = document.getElementById("summarizeAllBtn");
+const summarizeAllResult = document.getElementById("summarizeAllResult");
 
 let currentAdminUid = null;
 let currentAdminName = "";
 let currentFilter = "pending_admin_review";
 let unsubscribeRequests = null;
 let pendingAction = null;
+let lastLoadedRequests = [];
 const openCards = new Set();
 const subscribedChats = new Set();
+
+// ---------- AI helpers: สรุปข้อมูลคำขอ 1 รายการให้กระชับสำหรับ prompt ----------
+function requestToAiContext(data) {
+  return JSON.stringify({
+    ผู้แจ้ง: data.contact_name,
+    ประเภทขยะ: data.waste_types || [],
+    พื้นที่: data.sub_district,
+    ที่อยู่: data.address_text,
+    จุดสังเกต: data.landmark || "",
+    ปริมาณโดยประมาณ: data.estimated_quantity_description || "",
+    หมายเหตุจากผู้แจ้ง: data.notes || "",
+    วันเวลานัด: `${data.requested_date || ""} ${data.time_slot || ""}`,
+    สถานะ: STATUS_LABEL[data.status] || data.status,
+  });
+}
+
+// ---------- บันทึกทุกครั้งที่เรียก AI ลง subcollection pickup_requests/{id}/aiLog (audit trail) ----------
+// สำคัญ: ฟังก์ชันนี้ไม่แตะ field `status` ของคำขอเลย — สถานะจริงเปลี่ยนได้เฉพาะตอนคนกด "ยืนยัน" ใน modalConfirmBtn เท่านั้น
+async function logAiCall(requestId, type, input, output) {
+  try {
+    await db.collection("pickup_requests").doc(requestId).collection("aiLog").add({
+      type,
+      input,
+      output,
+      model: window.OPENROUTER_CONFIG.model,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+  } catch (err) {
+    console.error("บันทึก aiLog ไม่สำเร็จ", err);
+  }
+}
 
 function showToast(message, isError = false) {
   toast.textContent = message;
@@ -80,6 +116,45 @@ filterRow.querySelectorAll(".chip").forEach((chip) => {
   });
 });
 
+// ---------- AI: สรุปรายการคำขอที่กำลังแสดงอยู่ทั้งหมด ----------
+summarizeAllBtn.addEventListener("click", async () => {
+  if (!lastLoadedRequests.length) {
+    showToast("ไม่มีรายการให้สรุปในหมวดนี้", true);
+    return;
+  }
+  summarizeAllBtn.disabled = true;
+  summarizeAllBtn.classList.add("btn-ai-loading");
+  summarizeAllResult.hidden = false;
+  summarizeAllResult.textContent = "กำลังสรุป...";
+  try {
+    const context = JSON.stringify(lastLoadedRequests.map(requestToAiContextRaw));
+    const summary = await askAI(
+      "คุณเป็นผู้ช่วย admin ของระบบเรียกรถซาเล้งเก็บขยะ จะได้รับ list คำขอเป็น JSON " +
+      "ช่วยสรุปภาพรวมเป็นภาษาไทยแบบกระชับ (bullet สั้นๆ) เพื่อให้ admin ตัดสินใจตรวจสอบได้เร็วขึ้น " +
+      "เน้นจำนวนรายการ พื้นที่ที่ซ้ำกันบ่อย และรายการที่มีปริมาณ/หมายเหตุน่าสังเกตเป็นพิเศษ อย่าแต่งข้อมูลที่ไม่มีใน JSON ตอบเป็นข้อความธรรมดา ห้ามใช้ markdown syntax เช่น ** หรือ #",
+      context,
+    );
+    summarizeAllResult.textContent = summary;
+  } catch (err) {
+    console.error(err);
+    summarizeAllResult.textContent = `สรุปไม่สำเร็จ: ${err.message}`;
+  } finally {
+    summarizeAllBtn.disabled = false;
+    summarizeAllBtn.classList.remove("btn-ai-loading");
+  }
+});
+
+function requestToAiContextRaw(data) {
+  return {
+    ผู้แจ้ง: data.contact_name,
+    ประเภทขยะ: data.waste_types || [],
+    พื้นที่: data.sub_district,
+    ปริมาณโดยประมาณ: data.estimated_quantity_description || "",
+    หมายเหตุ: data.notes || "",
+    วันเวลานัด: `${data.requested_date || ""} ${data.time_slot || ""}`,
+  };
+}
+
 // ---------- request list (real-time, filter ตาม currentFilter) ----------
 function subscribeRequests() {
   if (unsubscribeRequests) unsubscribeRequests();
@@ -91,12 +166,16 @@ function subscribeRequests() {
 
   unsubscribeRequests = q.onSnapshot(
     (snapshot) => {
+      summarizeAllResult.hidden = true;
       if (snapshot.empty) {
+        lastLoadedRequests = [];
         requestList.innerHTML = '<div class="empty-note">ไม่มีคำขอในหมวดนี้</div>';
         return;
       }
       requestList.innerHTML = "";
+      lastLoadedRequests = [];
       snapshot.forEach((docSnap) => {
+        lastLoadedRequests.push(docSnap.data());
         requestList.appendChild(renderRequestCard(docSnap.id, docSnap.data()));
       });
     },
@@ -174,6 +253,8 @@ function buildDetail(id, data) {
     ${photosHtml}
   `;
 
+  detail.appendChild(buildSummarizeOne(id, data));
+
   if (data.status === "pending_admin_review") {
     const actionRow = document.createElement("div");
     actionRow.className = "action-row";
@@ -181,8 +262,8 @@ function buildDetail(id, data) {
       <button type="button" class="btn btn-primary" data-action="confirm">Confirm</button>
       <button type="button" class="btn btn-danger" data-action="reject">ลบ / Reject</button>
     `;
-    actionRow.querySelector('[data-action="confirm"]').addEventListener("click", () => openActionModal(id, "confirm"));
-    actionRow.querySelector('[data-action="reject"]').addEventListener("click", () => openActionModal(id, "reject"));
+    actionRow.querySelector('[data-action="confirm"]').addEventListener("click", () => openActionModal(id, "confirm", data));
+    actionRow.querySelector('[data-action="reject"]').addEventListener("click", () => openActionModal(id, "reject", data));
     detail.appendChild(actionRow);
   }
 
@@ -193,6 +274,88 @@ function buildDetail(id, data) {
 
   detail.appendChild(buildChatSection(id));
   return detail;
+}
+
+// ---------- แสดงผลสรุปของ AI แบบแยกบรรทัด "หัวข้อ: ค่า" ----------
+function renderSummaryLines(container, text) {
+  container.innerHTML = "";
+  const lines = (text || "").split("\n").map((l) => l.trim()).filter(Boolean);
+
+  if (!lines.length) {
+    container.textContent = text;
+    return;
+  }
+
+  lines.forEach((line) => {
+    const row = document.createElement("div");
+    row.className = "ai-summary-line";
+    const sepIdx = line.indexOf(":");
+    if (sepIdx > -1) {
+      const label = line.slice(0, sepIdx).trim();
+      const value = line.slice(sepIdx + 1).trim();
+      row.innerHTML = `<span class="ai-summary-label">${escapeHtml(label)}</span>${escapeHtml(value)}`;
+    } else {
+      row.textContent = line;
+    }
+    container.appendChild(row);
+  });
+}
+
+// ---------- AI: สรุปคำร้องรายการเดียว ----------
+// ผลลัพธ์เก็บที่ field `aiSuggestion` ของ pickup_requests/{id} (แคชไว้แสดงซ้ำได้โดยไม่ต้อง gen ใหม่)
+// ทุกครั้งที่เรียก AI จะถูก log ไว้ที่ subcollection pickup_requests/{id}/aiLog ด้วย (ดู logAiCall)
+// หมายเหตุ: ไม่แตะ field `status` เด็ดขาด — สถานะจริงเปลี่ยนได้เฉพาะตอนคนกด "ยืนยัน" เท่านั้น
+function buildSummarizeOne(id, data) {
+  const wrap = document.createElement("div");
+  wrap.className = "ai-summary-row";
+  wrap.innerHTML = `
+    <button type="button" class="btn btn-secondary ai-summarize-btn">🤖 สรุปคำร้องนี้</button>
+    <div class="ai-output" hidden></div>
+  `;
+
+  const btn = wrap.querySelector(".ai-summarize-btn");
+  const output = wrap.querySelector(".ai-output");
+
+  if (data.aiSuggestion) {
+    output.hidden = false;
+    renderSummaryLines(output, data.aiSuggestion);
+  }
+
+  btn.addEventListener("click", async () => {
+    btn.disabled = true;
+    btn.classList.add("btn-ai-loading");
+    output.hidden = false;
+    output.textContent = "กำลังสรุป...";
+    const input = requestToAiContext(data);
+    try {
+      const summary = await askAI(
+        "คุณเป็นผู้ช่วย admin ของระบบเรียกรถซาเล้งเก็บขยะ จะได้รับข้อมูลคำขอ 1 รายการเป็น JSON " +
+        "จัดเรียงข้อมูลสำคัญให้ admin อ่านได้เร็ว โดยตอบกลับเป็นบรรทัดแยกทีละหัวข้อ รูปแบบ \"หัวข้อ: ค่า\" หนึ่งบรรทัดต่อหนึ่งหัวข้อเท่านั้น เช่น\n" +
+        "พื้นที่: รอบเวียง\n" +
+        "ประเภทขยะ: กระดาษ, พลาสติก\n" +
+        "ปริมาณ: ปานกลาง (5-15 กก.)\n" +
+        "ปิดท้ายด้วยบรรทัด \"ข้อสังเกต: ...\" สั้นๆ ถ้ามีสิ่งที่ admin ควรระวังก่อนตัดสินใจ confirm/reject (ถ้าไม่มีให้เขียน \"ข้อสังเกต: ไม่มี\") " +
+        "ใช้เฉพาะข้อมูลที่มีใน JSON ห้ามใช้ markdown syntax เช่น ** หรือ # และห้ามเขียนเป็นย่อหน้าต่อเนื่อง",
+        input,
+      );
+      renderSummaryLines(output, summary);
+
+      try {
+        await db.collection("pickup_requests").doc(id).update({ aiSuggestion: summary });
+      } catch (saveErr) {
+        console.error("บันทึก aiSuggestion ไม่สำเร็จ", saveErr);
+      }
+      await logAiCall(id, "summary", input, summary);
+    } catch (err) {
+      console.error(err);
+      output.textContent = `สรุปไม่สำเร็จ: ${err.message}`;
+    } finally {
+      btn.disabled = false;
+      btn.classList.remove("btn-ai-loading");
+    }
+  });
+
+  return wrap;
 }
 
 // ---------- แก้ไขวัน-เวลานัดรับ (ไม่เปลี่ยนสถานะคำขอ) ----------
@@ -242,21 +405,82 @@ function buildDateTimeEditor(id, data) {
 }
 
 // ---------- confirm / reject (reject = ยกเลิกคำขอ ต้องกรอกเหตุผลก่อนเสมอ) modal ----------
-function openActionModal(requestId, action) {
-  pendingAction = { requestId, action };
+function openActionModal(requestId, action, data) {
+  pendingAction = { requestId, action, data };
   modalReasonInput.value = "";
+  modalReasonDropdown.value = "";
   if (action === "confirm") {
     modalTitle.textContent = "ยืนยัน Confirm คำขอนี้?";
     modalDesc.textContent = "สถานะจะเปลี่ยนเป็น \"เปิดให้สาเล้งรับงาน\" ทันที";
+    modalReasonDropdown.style.display = "none";
     modalReasonInput.style.display = "none";
+    modalDraftReasonBtn.style.display = "none";
   } else {
     modalTitle.textContent = "ยืนยัน Reject/ลบคำขอนี้?";
     modalDesc.textContent = "สถานะจะเปลี่ยนเป็น \"ยกเลิกแล้ว\" ทันที — ต้องระบุเหตุผลก่อนจึงจะยืนยันได้";
+    modalReasonDropdown.style.display = "block";
     modalReasonInput.style.display = "block";
+    modalDraftReasonBtn.style.display = "flex";
   }
   updateModalConfirmState();
   confirmModal.classList.add("open");
 }
+
+async function draftReasonFromSeed(seed) {
+  if (!pendingAction || !pendingAction.data) return;
+  if (!seed) {
+    showToast("พิมพ์เหตุผลคร่าวๆ ในช่องก่อน (เช่น \"ที่อยู่นอกเขตบริการ\") แล้วกดปุ่มนี้เพื่อให้ AI ช่วยเรียบเรียงให้สุภาพ", true);
+    return;
+  }
+
+  modalDraftReasonBtn.disabled = true;
+  modalDraftReasonBtn.classList.add("btn-ai-loading");
+  const originalLabel = modalDraftReasonBtn.textContent;
+  modalDraftReasonBtn.textContent = "กำลังเรียบเรียง...";
+  const input = JSON.stringify({
+    เหตุผลที่_admin_พิมพ์มา: seed,
+    ข้อมูลคำขอ: JSON.parse(requestToAiContext(pendingAction.data)),
+  });
+  try {
+    const drafted = await askAI(
+      "คุณช่วย admin เรียบเรียงเหตุผลการยกเลิกคำขอเรียกรถซาเล้งที่ admin พิมพ์มาแบบคร่าวๆ ให้เป็นประโยคสุภาพสมบูรณ์ 1 ประโยคภาษาไทย สำหรับส่งแจ้งลูกค้าโดยตรง " +
+      "ห้ามเพิ่มเหตุผลอื่นหรือรายละเอียดใดๆ ที่ admin ไม่ได้พิมพ์มา ห้ามเดาสาเหตุเอง หน้าที่ของคุณคือปรับสำนวนให้สุภาพ+กระชับเท่านั้น ไม่ใช่คิดเหตุผลใหม่ " +
+      "ข้อมูลคำขอที่แนบมาให้ใช้แค่เพื่ออ้างอิงชื่อ/บริบทเท่านั้น ห้ามหยิบมาเป็นเหตุผลเพิ่มเติมเอง " +
+      "ตอบกลับเฉพาะประโยคเหตุผล ห้ามมีคำอธิบายอื่นปน ตอบเป็นข้อความธรรมดา ห้ามใช้ markdown syntax เช่น ** หรือ #",
+      input,
+    );
+    modalReasonInput.value = drafted;
+    await logAiCall(pendingAction.requestId, "cancel_reason", input, drafted);
+    updateModalConfirmState();
+  } catch (err) {
+    console.error(err);
+    showToast(`เรียบเรียงเหตุผลไม่สำเร็จ: ${err.message}`, true);
+  } finally {
+    modalDraftReasonBtn.disabled = false;
+    modalDraftReasonBtn.classList.remove("btn-ai-loading");
+    modalDraftReasonBtn.textContent = originalLabel;
+  }
+}
+
+modalDraftReasonBtn.addEventListener("click", () => draftReasonFromSeed(modalReasonInput.value.trim()));
+
+// ข้อความสำเร็จรูปสำหรับสาเหตุที่พบบ่อย — ใส่ตรงๆ ไม่เรียก AI (เร็วกว่า และไม่เสี่ยง AI แต่งเกิน)
+const REASON_TEMPLATES = {
+  "ที่อยู่นอกเขตพื้นที่ให้บริการ": "ขออภัยค่ะ ที่อยู่ที่ท่านแจ้งอยู่นอกเขตพื้นที่ที่เราให้บริการในขณะนี้ ทางเราจึงไม่สามารถดำเนินการตามคำขอนี้ได้",
+  "ติดต่อลูกค้าไม่ได้ หรือเบอร์โทรไม่ถูกต้อง": "ขออภัยค่ะ เจ้าหน้าที่ไม่สามารถติดต่อท่านตามเบอร์โทรศัพท์ที่แจ้งไว้ได้ จึงขอยกเลิกคำขอนี้",
+  "ข้อมูลคำขอไม่ครบถ้วนหรือไม่ชัดเจน": "ขออภัยค่ะ ข้อมูลในคำขอของท่านไม่ครบถ้วน ทางเราจึงไม่สามารถดำเนินการต่อได้ในขณะนี้",
+  "ลูกค้าแจ้งขอยกเลิกเอง": "ยกเลิกคำขอนี้ตามที่ลูกค้าแจ้งความประสงค์ขอยกเลิกด้วยตนเอง",
+  "คำขอนี้ซ้ำกับคำขออื่นของลูกค้าคนเดียวกัน": "คำขอนี้ซ้ำกับคำขออื่นของท่านที่มีอยู่แล้วในระบบ จึงขอยกเลิกรายการนี้",
+  "ช่วงเวลานัดหมายไม่สามารถให้บริการได้": "ขออภัยค่ะ ช่วงเวลาที่ท่านนัดหมายไม่สามารถให้บริการได้ในขณะนี้ จึงขอยกเลิกคำขอนี้",
+};
+
+modalReasonDropdown.addEventListener("change", () => {
+  const picked = modalReasonDropdown.value;
+  modalReasonDropdown.value = "";
+  if (!picked) return;
+  modalReasonInput.value = REASON_TEMPLATES[picked] || picked;
+  updateModalConfirmState();
+});
 
 function updateModalConfirmState() {
   const needsReason = pendingAction && pendingAction.action === "reject";
@@ -292,6 +516,7 @@ modalConfirmBtn.addEventListener("click", async () => {
       updateData.cancel_reason = reason;
     }
 
+    // status เปลี่ยนที่นี่เท่านั้น — จุดเดียวในทั้งไฟล์ที่เขียน field `status`, เกิดขึ้นเมื่อคนกด "ยืนยัน" เท่านั้น ไม่มี AI call ใดแตะ field นี้
     await db.collection("pickup_requests").doc(requestId).update(updateData);
     showToast(action === "confirm" ? "Confirm สำเร็จ" : "ลบ/Reject สำเร็จ");
   } catch (err) {

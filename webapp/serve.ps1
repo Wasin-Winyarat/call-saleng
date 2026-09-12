@@ -30,22 +30,33 @@ $mime = @{
 try {
   while ($listener.IsListening) {
     $ctx = $listener.GetContext()
-    $path = $ctx.Request.Url.LocalPath
-    if ($path.EndsWith("/")) { $path = $path + "index.html" }
-    $file = Join-Path $dir $path.TrimStart("/")
+    try {
+      $path = $ctx.Request.Url.LocalPath
+      if ($path.EndsWith("/")) { $path = $path + "index.html" }
+      $file = Join-Path $dir $path.TrimStart("/")
 
-    if (Test-Path $file -PathType Leaf) {
-      $ext = [System.IO.Path]::GetExtension($file)
-      $ctx.Response.ContentType = if ($mime[$ext]) { $mime[$ext] } else { "application/octet-stream" }
-      $ctx.Response.Headers.Add("Cache-Control", "no-store")
-      $bytes = [System.IO.File]::ReadAllBytes($file)
-      $ctx.Response.OutputStream.Write($bytes, 0, $bytes.Length)
-    } else {
-      $ctx.Response.StatusCode = 404
-      $notFound = [System.Text.Encoding]::UTF8.GetBytes("404 Not Found: $path")
-      $ctx.Response.OutputStream.Write($notFound, 0, $notFound.Length)
+      if (Test-Path $file -PathType Leaf) {
+        $ext = [System.IO.Path]::GetExtension($file)
+        $ctx.Response.ContentType = if ($mime[$ext]) { $mime[$ext] } else { "application/octet-stream" }
+        $ctx.Response.Headers.Add("Cache-Control", "no-store")
+        $bytes = [System.IO.File]::ReadAllBytes($file)
+        $ctx.Response.ContentLength64 = $bytes.Length
+        if ($ctx.Request.HttpMethod -ne "HEAD") {
+          $ctx.Response.OutputStream.Write($bytes, 0, $bytes.Length)
+        }
+      } else {
+        $ctx.Response.StatusCode = 404
+        $notFound = [System.Text.Encoding]::UTF8.GetBytes("404 Not Found: $path")
+        $ctx.Response.ContentLength64 = $notFound.Length
+        if ($ctx.Request.HttpMethod -ne "HEAD") {
+          $ctx.Response.OutputStream.Write($notFound, 0, $notFound.Length)
+        }
+      }
+    } catch {
+      Write-Host "Request error: $_"
+    } finally {
+      $ctx.Response.OutputStream.Close()
     }
-    $ctx.Response.OutputStream.Close()
   }
 } finally {
   $listener.Stop()

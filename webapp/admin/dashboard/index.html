@@ -25,6 +25,11 @@
     <div class="chip" data-status="">ทั้งหมด</div>
   </div>
 
+  <div class="ai-summarize-all">
+    <button type="button" class="btn btn-secondary" id="summarizeAllBtn">🤖 สรุปรายการที่แสดงอยู่</button>
+    <div class="ai-output" id="summarizeAllResult" hidden></div>
+  </div>
+
   <div id="requestList">
     <div class="empty-note">กำลังโหลด...</div>
   </div>
@@ -34,7 +39,17 @@
   <div class="modal-box">
     <div class="modal-title" id="modalTitle">ยืนยันการทำรายการ?</div>
     <div class="modal-desc" id="modalDesc"></div>
-    <textarea class="modal-reason" id="modalReasonInput" placeholder="เหตุผลการยกเลิก (จำเป็นต้องกรอก)" style="display:none;"></textarea>
+    <select class="modal-reason-dropdown" id="modalReasonDropdown" style="display:none;">
+      <option value="">-- เลือกสาเหตุที่พบบ่อย (ข้อความสำเร็จรูป ไม่ใช้ AI) --</option>
+      <option value="ที่อยู่นอกเขตพื้นที่ให้บริการ">ที่อยู่นอกเขตพื้นที่ให้บริการ</option>
+      <option value="ติดต่อลูกค้าไม่ได้ หรือเบอร์โทรไม่ถูกต้อง">ติดต่อลูกค้าไม่ได้ / เบอร์โทรไม่ถูกต้อง</option>
+      <option value="ข้อมูลคำขอไม่ครบถ้วนหรือไม่ชัดเจน">ข้อมูลคำขอไม่ครบถ้วน/ไม่ชัดเจน</option>
+      <option value="ลูกค้าแจ้งขอยกเลิกเอง">ลูกค้าแจ้งขอยกเลิกเอง</option>
+      <option value="คำขอนี้ซ้ำกับคำขออื่นของลูกค้าคนเดียวกัน">คำขอซ้ำกับรายการอื่น</option>
+      <option value="ช่วงเวลานัดหมายไม่สามารถให้บริการได้">ช่วงเวลานัดหมายไม่สามารถให้บริการได้</option>
+    </select>
+    <textarea class="modal-reason" id="modalReasonInput" placeholder="เลือกจากรายการด้านบน หรือพิมพ์เหตุผลอื่นๆ เองแล้วกด '🤖 ช่วยเรียบเรียงให้สุภาพ' ด้านล่าง" style="display:none;"></textarea>
+    <button class="btn btn-secondary" id="modalDraftReasonBtn" style="display:none; margin-bottom:14px;">🤖 ช่วยเรียบเรียงให้สุภาพ</button>
     <div class="modal-actions">
       <button class="btn btn-primary" id="modalConfirmBtn">ยืนยัน</button>
       <button class="btn btn-secondary" id="modalCancelBtn">ยกเลิก</button>
@@ -48,6 +63,8 @@
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
 <script src="../../firebase-config.js"></script>
+<script src="../../ai-config.js"></script>
+<script src="../../ai-helpers.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
