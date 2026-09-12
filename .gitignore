@@ -34,3 +34,8 @@ webapp/ai-config.js
 
 # Firebase CLI local deploy cache (สร้างอัตโนมัติตอนรัน firebase deploy เฉพาะเครื่อง)
 .firebase/
+
+# Playwright e2e test tooling (แยกจาก webapp/ ไม่กระทบไฟล์ที่ deploy จริง)
+e2e/node_modules/
+e2e/playwright-report/
+e2e/test-results/
