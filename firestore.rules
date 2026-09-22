@@ -1,11 +1,90 @@
 rules_version = '2';
 
-// กฎเดียว: ต้อง login (Firebase Auth) ก่อน ถึงจะอ่าน/เขียนได้ทุก collection
-// ยังไม่แยกสิทธิ์ตาม role (user/admin/saleng) หรือเจ้าของ document — ดู ACL.md สำหรับสิทธิ์แต่ละบทบาทที่ต้องแปลงเป็น rule ละเอียดกว่านี้ทีหลัง
+// แก้ตามช่องโหว่ที่ยืนยันแล้วจากการทดสอบจริงเมื่อ 2026-09-22 (ดู test-results.md ข้อ 5 และ BACKLOG.md ข้อ 3):
+// กฎเดิม `allow read, write: if request.auth != null` เช็กแค่ "login แล้วหรือยัง" ไม่เช็ก ownership/role เลย
+// ทำให้ user คนไหนก็อ่าน/เขียนข้อมูลของคนอื่น และอ่าน admin_accounts ได้หมด — กฎนี้แก้ให้ตรงกับสิทธิ์ที่นิยามไว้ใน ACL.md
+// เฉพาะส่วนที่ implement เป็นโค้ดจริงแล้วตาม SCOPE.md (User สร้าง/แก้ไข/ลบคำขอ + Admin confirm/reject/แก้ไขวัน-เวลา + แชท)
+// collection อื่นที่ยังไม่ implement (saleng_accounts, request_match, receipt, ฯลฯ) ไม่ต้องเขียน rule ไว้ล่วงหน้า — จะถูกปฏิเสธโดย default (ไม่มี allow ใดครอบคลุม)
+//
+// หมายเหตุ debug: ระหว่างพัฒนากฎนี้เจอว่า get() ในเงื่อนไข `allow create` ของ chat_messages (เช็ก ownership ของ
+// pickup_request ที่ผูกอยู่) ทำให้ create ถูกปฏิเสธแม้ทุกเงื่อนไขย่อยที่แยกทดสอบเดี่ยวๆผ่านหมด (ทดสอบแยกจริงหลายรอบ
+// บน production) — ยังไม่หาสาเหตุที่แน่ชัดได้ (อาจเป็น edge case ของ get() ฝั่ง create rule) จึงตัดการเช็ก ownership
+// ผ่าน get() ออกจาก allow create ชั่วคราว เหลือแค่เช็กว่า sender_id ตรงกับผู้ login และ sender_role ประกาศถูกต้อง
+// (ยังปิดไม่ให้ user ปลอมเป็น admin ได้ เพราะฝั่ง admin ยังเช็ก isAdmin() อยู่) — ช่องโหว่ที่เหลือคือ user ที่ login
+// แล้วอาจส่งข้อความแนบกับ request_id ของคนอื่นได้ (สแปม ไม่ใช่การอ่านข้อมูลรั่ว) บันทึกไว้เป็น TODO ใน BACKLOG.md
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if request.auth != null;
+
+    function isAdmin() {
+      return request.auth != null &&
+        exists(/databases/$(database)/documents/admin_accounts/$(request.auth.uid));
+    }
+
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    // เจ้าของบัญชีเท่านั้นที่อ่าน/แก้ไขโปรไฟล์ตัวเองได้ (ไม่มี flow ให้ admin อ่าน/แก้บัญชี user ในโค้ดปัจจุบัน)
+    match /user_accounts/{uid} {
+      allow read, write: if isOwner(uid);
+    }
+
+    // ที่อยู่ที่บันทึกไว้ — doc id คือ uid ของ user, เจ้าของเท่านั้น
+    match /user_addresses/{uid} {
+      allow read, write: if isOwner(uid);
+    }
+
+    // บัญชี admin สร้างไว้ล่วงหน้าผ่าน seed/console เท่านั้น ไม่มี flow ให้เขียนจาก client
+    // อ่านได้แค่ doc ของตัวเอง (ใช้ตอน login เพื่อยืนยันสิทธิ์ + ดึงชื่อ) ไม่ให้ user ธรรมดาหรือ admin คนอื่นอ่านได้
+    match /admin_accounts/{uid} {
+      allow read: if isOwner(uid);
+      allow write: if false;
+    }
+
+    match /pickup_requests/{requestId} {
+      allow read: if isAdmin() || isOwner(resource.data.user_id);
+
+      // สร้างได้เฉพาะคำขอของตัวเอง และต้องเริ่มที่ pending_admin_review เท่านั้น
+      allow create: if isOwner(request.resource.data.user_id) &&
+        request.resource.data.status == 'pending_admin_review';
+
+      // admin แก้ได้ทุกกรณี (confirm/reject/แก้ไขวัน-เวลา ตาม ACL.md)
+      // user เจ้าของแก้ได้เฉพาะตอนยัง pending_admin_review และห้ามเปลี่ยน status/ย้ายเจ้าของคำขอเอง
+      allow update: if isAdmin() ||
+        (isOwner(resource.data.user_id) &&
+         resource.data.status == 'pending_admin_review' &&
+         request.resource.data.status == 'pending_admin_review' &&
+         request.resource.data.user_id == resource.data.user_id);
+
+      // ลบได้เฉพาะเจ้าของคำขอ และเฉพาะตอนยัง pending_admin_review (ไม่มี flow ให้ admin ลบในโค้ดปัจจุบัน)
+      allow delete: if isOwner(resource.data.user_id) &&
+        resource.data.status == 'pending_admin_review';
+
+      // audit log การเรียก AI ของ admin (pickup_requests/{id}/aiLog) — admin เท่านั้น
+      match /aiLog/{logId} {
+        allow read, write: if isAdmin();
+      }
+    }
+
+    match /chat_messages/{messageId} {
+      // อ่านได้เฉพาะ admin หรือเจ้าของคำขอที่ผูกอยู่ (get() ใช้งานได้ปกติฝั่ง read — ทดสอบผ่านจริงแล้ว)
+      allow read: if isAdmin() ||
+        (request.auth != null &&
+         get(/databases/$(database)/documents/pickup_requests/$(resource.data.request_id)).data.user_id == request.auth.uid);
+
+      // สร้างได้ถ้า sender_id ตรงกับผู้ login และประกาศ role ตรงกับสิทธิ์จริง (admin ต้องเป็น admin จริง)
+      // TODO (ดู BACKLOG.md): ยังไม่เช็กว่า sender_role=='user' เป็นเจ้าของ pickup_request ที่ผูกอยู่จริงหรือไม่
+      // เพราะ get() ใน allow create ทำให้ถูกปฏิเสธผิดพลาด (debug แล้วยังไม่พบสาเหตุ) — ไม่ใช่ช่องโหว่ข้อมูลรั่ว
+      // (อ่านยังถูกจำกัดด้วย allow read ข้างบนตามปกติ) แค่ user อาจแนบข้อความผิด request_id ได้
+      allow create: if request.auth != null &&
+        request.resource.data.sender_id == request.auth.uid &&
+        (
+          (request.resource.data.sender_role == 'admin' && isAdmin()) ||
+          (request.resource.data.sender_role == 'user' && !isAdmin())
+        );
+
+      // ไม่มี flow แก้ไข/ลบข้อความแชทในโค้ดปัจจุบัน
+      allow update, delete: if false;
     }
   }
 }
