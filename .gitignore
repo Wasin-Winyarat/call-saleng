@@ -39,3 +39,4 @@ webapp/ai-config.js
 e2e/node_modules/
 e2e/playwright-report/
 e2e/test-results/
+.playwright-mcp/

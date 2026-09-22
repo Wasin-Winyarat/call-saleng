@@ -7,3 +7,8 @@
 - ขอบเขตของการทดสอบ (in scope / out of scope)
 
 อ้างอิงจากข้อกำหนดใน [[../../01-requirements/01-spec/index|01-spec]] และการออกแบบใน [[../../02-design/index|02-design]] ผลของการทดสอบตาม test case เหล่านี้ให้บันทึกใน [[../02-test-result/index|02-test-result]]
+
+## เอกสารในโฟลเดอร์นี้
+
+- [[20260820-001-saleng-pickup-request-user-flow-test-plan|สร้างและติดตามคำขอเรียกรถซาเล้ง (ฝั่ง User)]]
+- [[20260922-002-saleng-pickup-request-admin-review-test-plan|ตรวจสอบและจัดการคำขอ (ฝั่ง Admin: Confirm / Reject / แก้ไขวัน-เวลา / แชท)]]
