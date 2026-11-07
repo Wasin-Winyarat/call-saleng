@@ -82,7 +82,7 @@ webapp/
 | `ad_banners` | `ad_banner` (เก็บรูปเป็น base64 ใน `image_data` แทน `image_reference`; `status` ใช้แค่ `active`/`draft` — `expired` คำนวณจาก `end_date` ตอนแสดงผล; `start_date`/`end_date` เป็น string `YYYY-MM-DD`; มี `link_url`, `display_order` เพิ่ม) |
 | `request_photos` | `request_photo` (เก็บรูปเป็น base64 JPEG data URL ใน field `image_data` แทน `file_reference` — ไม่ใช้ Firebase Storage, 1 รูป = 1 doc, บีบอัดฝั่ง client ให้ data URL ≤ 700,000 ตัวอักษรเพราะ doc จำกัด 1 MiB; มี `user_id` ซ้ำไว้เพื่อเช็กสิทธิ์ใน rules) |
 
-Collection อื่นที่มีอยู่ใน `database-schema.md` แต่**ยังไม่ implement**เป็นโค้ดจริง (นอกขอบเขต module ปัจจุบันตาม `SCOPE.md` — ฝั่งสาเล้ง/matching/ใบเสร็จ/ราคากลาง): `waste_type`, `waste_reference_price`, `pickup_request_waste_item`, `receipt`, `receipt_item`, `saleng_fee_ledger_entry`, `saleng_wallet_balance`, `membership_tier` — อย่าสมมติว่ามี collection เหล่านี้อยู่ใน Firestore จริงแล้ว ต้องสร้างตอน implement เท่านั้น
+Collection อื่นที่มีอยู่ใน `database-schema.md` แต่**ยังไม่ implement**เป็นโค้ดจริง (ยังไม่อยู่ในขอบเขตที่ทำ — ประเภทขยะ/ราคากลาง/ใบเสร็จ/ค่าธรรมเนียมสาเล้ง/สมาชิก; ฝั่งสาเล้งและ matching ทำแล้ว ดูตารางด้านบน): `waste_type`, `waste_reference_price`, `pickup_request_waste_item`, `receipt`, `receipt_item`, `saleng_fee_ledger_entry`, `saleng_wallet_balance`, `membership_tier` — อย่าสมมติว่ามี collection เหล่านี้อยู่ใน Firestore จริงแล้ว ต้องสร้างตอน implement เท่านั้น
 
 ### สถานะ (status) ของ `pickup_requests`
 
