@@ -18,7 +18,18 @@ const firebaseConfig = {
   measurementId: "G-T09RBKNFTR",
 };
 
+// โหมดทดสอบอัตโนมัติ (e2e/): เปิดผ่าน Firebase Hosting emulator ที่ 127.0.0.1:5050 เท่านั้น
+// → ต่อ Auth/Firestore emulator ในเครื่องแทน production และใช้ project "demo-*" ที่ Firebase
+// รับประกันว่าไม่มีทางยิงไปหา resource จริงได้ (ดู e2e/README.md) — การเปิดแบบอื่นทั้งหมดใช้ production เหมือนเดิม
+const USE_EMULATORS = ["127.0.0.1", "localhost"].includes(window.location.hostname) && window.location.port === "5050";
+if (USE_EMULATORS) firebaseConfig.projectId = "demo-callsaleng";
+
 firebase.initializeApp(firebaseConfig);
 
 const db = firebase.firestore();
 const auth = firebase.auth();
+
+if (USE_EMULATORS) {
+  auth.useEmulator("http://127.0.0.1:9099", { disableWarnings: true });
+  db.useEmulator("127.0.0.1", 8085);
+}

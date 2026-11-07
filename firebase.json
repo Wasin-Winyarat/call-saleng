@@ -12,5 +12,12 @@
         "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
       }
     ]
+  },
+  "emulators": {
+    "auth": { "host": "127.0.0.1", "port": 9099 },
+    "firestore": { "host": "127.0.0.1", "port": 8085 },
+    "hosting": { "host": "127.0.0.1", "port": 5050 },
+    "ui": { "enabled": false },
+    "singleProjectMode": true
   }
 }

@@ -28,6 +28,8 @@ powershell -File webapp/serve.ps1
 # แล้วเปิด http://localhost:8080/
 ```
 
+มี automated tester ใน [e2e/](e2e/README.md) (Playwright + Firebase Emulator — ไม่แตะ production): `cd e2e; npm test` ต้องมี Java JDK เพราะ emulator ต้องใช้ — `webapp/firebase-config.js` ต่อ emulator เองเฉพาะตอนเปิดผ่าน `127.0.0.1:5050` เพิ่ม feature แล้วให้เพิ่มเทสต์ใน `e2e/tests/` ด้วย
+
 ทดสอบ feature ใหม่ด้วยมือผ่าน browser จริงเสมอ (ดูโฟลเดอร์ [webapp/seed/](webapp/seed/) สำหรับ seed ข้อมูลตัวอย่างลง Firestore ถ้าต้องการข้อมูลทดสอบ)
 
 ## Architecture ของ webapp/
