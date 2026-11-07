@@ -7,12 +7,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="../bottom-nav.css">
 </head>
 <!-- เปิดไฟล์นี้ตรงๆ (double-click) ได้เลย ไม่ต้องรัน server -->
-<body>
+<body data-nav="tracking">
 <div class="page">
   <div class="topbar">
-    <a class="back-chevron" href="../dashboard/index.html">←</a>
     <div class="topbar-title">ติดตามคำขอของฉัน</div>
   </div>
   <div class="text-secondary">สถานะคำขอที่ส่งไปแล้ว (real-time) — เปิดกล่องข้อความเพื่อแชทกับ Admin ได้ในแต่ละคำขอ</div>
@@ -30,5 +30,6 @@
 <script src="../firebase-config.js"></script>
 <script src="../notify-helpers.js"></script>
 <script src="app.js"></script>
+<script src="../bottom-nav.js"></script>
 </body>
 </html>

@@ -3,6 +3,7 @@
 // ข้อจำกัด: สถานะ "อ่านแล้ว" ไม่ sync ข้ามเครื่อง/browser (เปิดเครื่องใหม่จะเห็น badge ของข้อความเก่าอีกรอบ)
 
 const SEEN_KEY_PREFIX = "greensaleng_seen_";
+const SEEN_CHANGED_EVENT = "greensaleng-seen-changed"; // bottom-nav.js ฟังเพื่ออัปเดต badge
 const INITIAL_STATUS = "pending_admin_review"; // คำขอที่ยังไม่เคยบันทึกว่าเห็น ถือว่าเห็นสถานะเริ่มต้นแล้ว
 
 function loadSeenState(uid) {
@@ -21,6 +22,7 @@ function saveSeenState(uid, seen) {
   } catch (err) {
     // เงียบไว้ — badge ยังทำงานได้ใน session นี้
   }
+  window.dispatchEvent(new Event(SEEN_CHANGED_EVENT));
 }
 
 function seenStatusOf(seen, requestId) {

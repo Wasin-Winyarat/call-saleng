@@ -4,7 +4,16 @@ const MOCKUP_POINTS = 120;
 const greetingName = document.getElementById("greetingName");
 const pointsValue = document.getElementById("pointsValue");
 const logoutLink = document.getElementById("logoutLink");
-const trackingBadge = document.getElementById("trackingBadge");
+const latestRequests = document.getElementById("latestRequests");
+
+const STATUS_LABEL = {
+  pending_admin_review: "รอตรวจสอบ",
+  cancelled: "ยกเลิกแล้ว",
+  open_for_saleng: "รอสาเล้งรับงาน",
+  pending_match_confirm: "รอยืนยันการจับคู่",
+  confirmed: "ยืนยันแล้ว",
+  completed: "เสร็จสิ้น",
+};
 
 pointsValue.textContent = MOCKUP_POINTS;
 
@@ -23,44 +32,48 @@ auth.onAuthStateChanged(async (user) => {
     console.error("โหลดโปรไฟล์ไม่สำเร็จ", err);
   }
 
-  subscribeTrackingBadge(user.uid);
+  subscribeLatestRequests(user.uid);
 });
 
-// ---------- badge บนการ์ด "ติดตามคำขอ" = จำนวนคำขอที่สถานะเปลี่ยน + ข้อความใหม่จาก Admin (real-time) ----------
-// หน้านี้แค่อ่านสถานะ "เห็นแล้ว" — ล้าง badge เกิดขึ้นที่หน้า tracking ตอนเปิดดู (notify-helpers.js)
-function subscribeTrackingBadge(uid) {
-  const statuses = new Map(); // requestId → status
-  const chats = new Map(); // requestId → ข้อความทั้งหมด
-  const chatListeners = new Map();
-
-  const render = () => {
-    const seen = loadSeenState(uid);
-    let total = 0;
-    statuses.forEach((status, id) => {
-      if (hasStatusUpdate(seen, id, status)) total++;
-      total += countUnreadAdminMessages(seen, id, chats.get(id) || []);
-    });
-    trackingBadge.textContent = total > 99 ? "99+" : total;
-    trackingBadge.hidden = total === 0;
-  };
-
+// ---------- คำขอล่าสุด 3 รายการ (real-time) — กดแล้วไปหน้าติดตาม ----------
+// badge แจ้งเตือนย้ายไปอยู่ที่เมนู "ติดตาม" ในแถบด้านล่าง (bottom-nav.js)
+function subscribeLatestRequests(uid) {
   db.collection("pickup_requests")
     .where("user_id", "==", uid)
+    .orderBy("created_at", "desc")
+    .limit(3)
     .onSnapshot((snapshot) => {
-      statuses.clear();
-      snapshot.forEach((docSnap) => {
-        const id = docSnap.id;
-        statuses.set(id, docSnap.data().status);
-        if (chatListeners.has(id)) return;
-        chatListeners.set(id, db.collection("chat_messages")
-          .where("request_id", "==", id)
-          .onSnapshot((chatSnap) => {
-            chats.set(id, chatSnap.docs.map((d) => d.data()));
-            render();
-          }, (err) => console.error("โหลดแชทไม่สำเร็จ", err)));
-      });
-      render();
-    }, (err) => console.error("โหลดคำขอไม่สำเร็จ", err));
+      if (snapshot.empty) {
+        latestRequests.innerHTML = '<div class="empty-note">ยังไม่มีคำขอ — <a href="../pickup-request/index.html">เรียกรถซาเล้งครั้งแรก</a></div>';
+        return;
+      }
+      latestRequests.innerHTML = "";
+      snapshot.forEach((docSnap) => latestRequests.appendChild(renderLatestCard(docSnap.data())));
+    }, (err) => {
+      console.error("โหลดคำขอล่าสุดไม่สำเร็จ", err);
+      latestRequests.innerHTML = '<div class="empty-note">โหลดคำขอไม่สำเร็จ ลองรีเฟรชหน้าใหม่</div>';
+    });
+}
+
+function renderLatestCard(data) {
+  const card = document.createElement("a");
+  card.className = "latest-card";
+  card.href = "../tracking/index.html";
+  card.innerHTML = `
+    <div class="latest-card-icon" aria-hidden="true">♻️</div>
+    <div class="latest-card-body">
+      <div class="latest-card-title">${escapeHtml((data.waste_types || []).join(", ") || "-")}</div>
+      <div class="latest-card-meta">นัด ${escapeHtml(data.requested_date || "-")} · ${escapeHtml(data.time_slot || "-")}</div>
+    </div>
+    <span class="status-pill ${escapeHtml(data.status)}">${escapeHtml(STATUS_LABEL[data.status] || data.status || "-")}</span>
+  `;
+  return card;
+}
+
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str || "";
+  return div.innerHTML;
 }
 
 logoutLink.addEventListener("click", async (e) => {

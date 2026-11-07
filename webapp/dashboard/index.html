@@ -7,9 +7,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="../bottom-nav.css">
 </head>
 <!-- เปิดไฟล์นี้ตรงๆ (double-click) ได้เลย ไม่ต้องรัน server -->
-<body>
+<body data-nav="home">
 <div class="page">
   <div class="topbar">
     <div class="topbar-avatar">🙂</div>
@@ -20,43 +21,20 @@
     <a class="topbar-logout" href="#" id="logoutLink">ออกจากระบบ</a>
   </div>
 
-  <div class="nav-card-list">
-    <a class="nav-card" href="../profile/index.html">
-      <div class="nav-card-icon tint-blue">👤</div>
-      <div class="nav-card-body">
-        <div class="nav-card-title">โปรไฟล์ของฉัน</div>
-        <div class="nav-card-desc">ที่อยู่ที่บันทึกไว้ · ข้อมูลส่วนตัว · แต้มสะสม</div>
-      </div>
-      <div class="nav-card-chevron">›</div>
-    </a>
+  <a class="hero-cta" href="../pickup-request/index.html">
+    <div class="hero-cta-body">
+      <div class="hero-cta-title">เรียกรถซาเล้ง</div>
+      <div class="hero-cta-desc">นัดรับขยะรีไซเคิลถึงหน้าบ้าน</div>
+    </div>
+    <div class="hero-cta-icon" aria-hidden="true">🛺</div>
+  </a>
 
-    <a class="nav-card" href="../pickup-request/index.html">
-      <div class="nav-card-icon tint-green">📝</div>
-      <div class="nav-card-body">
-        <div class="nav-card-title">ส่งคำร้อง</div>
-        <div class="nav-card-desc">เรียกรถซาเล้งมารับขยะรีไซเคิลที่บ้าน</div>
-      </div>
-      <div class="nav-card-chevron">›</div>
-    </a>
-
-    <a class="nav-card" href="../tracking/index.html">
-      <div class="nav-card-icon tint-blue">📦</div>
-      <div class="nav-card-body">
-        <div class="nav-card-title">ติดตามคำขอ</div>
-        <div class="nav-card-desc">ดูสถานะคำขอที่ส่งไปแล้ว · แชทกับ Admin</div>
-      </div>
-      <span class="nav-card-badge" id="trackingBadge" hidden></span>
-      <div class="nav-card-chevron">›</div>
-    </a>
-
-    <a class="nav-card" href="../prices/index.html">
-      <div class="nav-card-icon tint-peach">💰</div>
-      <div class="nav-card-body">
-        <div class="nav-card-title">ราคาขยะ</div>
-        <div class="nav-card-desc">เช็คราคารับซื้อขยะรีไซเคิลล่าสุด</div>
-      </div>
-      <div class="nav-card-chevron">›</div>
-    </a>
+  <div class="section-head">
+    <div class="section-title">คำขอล่าสุด</div>
+    <a class="section-link" href="../tracking/index.html">ดูทั้งหมด ›</a>
+  </div>
+  <div id="latestRequests">
+    <div class="empty-note">กำลังโหลด...</div>
   </div>
 </div>
 
@@ -66,5 +44,6 @@
 <script src="../firebase-config.js"></script>
 <script src="../notify-helpers.js"></script>
 <script src="app.js"></script>
+<script src="../bottom-nav.js"></script>
 </body>
 </html>

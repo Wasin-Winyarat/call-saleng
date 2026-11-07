@@ -44,27 +44,49 @@ body {
 }
 .topbar-logout { font-size: 13px; color: var(--color-primary-600); font-weight: 600; text-decoration: none; flex-shrink: 0; }
 
-.nav-card-list { display: flex; flex-direction: column; gap: 14px; margin-top: 28px; }
-.nav-card {
-  display: flex; align-items: center; gap: 14px;
-  background: var(--color-neutral-card); border-radius: var(--radius-md);
-  padding: 18px; text-decoration: none; color: var(--color-text-primary);
-  border: 1px solid var(--color-neutral-300);
+.hero-cta {
+  display: flex; align-items: center; gap: 12px; margin-top: 24px;
+  padding: 20px; border-radius: var(--radius-lg); text-decoration: none; color: #fff;
+  background: linear-gradient(135deg, var(--color-primary-600), var(--color-primary-700));
+  box-shadow: 0 8px 20px rgba(31, 92, 61, .25);
 }
-.nav-card-icon {
-  width: 52px; height: 52px; border-radius: var(--radius-md); flex-shrink: 0;
-  display: flex; align-items: center; justify-content: center; font-size: 24px;
+.hero-cta-body { flex: 1; min-width: 0; }
+.hero-cta-title { font-size: 20px; font-weight: 700; }
+.hero-cta-desc { font-size: 13px; opacity: .85; }
+.hero-cta-icon {
+  width: 56px; height: 56px; border-radius: var(--radius-full); flex-shrink: 0;
+  background: rgba(255, 255, 255, .18); display: flex; align-items: center; justify-content: center; font-size: 28px;
 }
-.nav-card-icon.tint-green { background: var(--color-primary-100); }
-.nav-card-icon.tint-blue { background: var(--color-accent-blue-100); }
-.nav-card-icon.tint-peach { background: var(--color-accent-peach-100); }
-.nav-card-body { flex: 1; min-width: 0; }
-.nav-card-title { font-size: 16px; font-weight: 700; margin-bottom: 2px; }
-.nav-card-desc { font-size: 13px; color: var(--color-text-secondary); }
-.nav-card-badge {
-  min-width: 24px; height: 24px; padding: 0 7px; border-radius: var(--radius-full); flex-shrink: 0;
-  display: inline-flex; align-items: center; justify-content: center;
-  background: var(--color-danger); color: #fff; font-size: 12px; font-weight: 700;
+
+.section-head { display: flex; align-items: baseline; justify-content: space-between; margin: 28px 0 10px; }
+.section-title { font-size: 16px; font-weight: 700; }
+.section-link { font-size: 13px; font-weight: 600; color: var(--color-primary-600); text-decoration: none; }
+
+.latest-card {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 10px;
+  background: var(--color-neutral-card); border: 1px solid var(--color-neutral-300); border-radius: var(--radius-md);
+  padding: 14px; text-decoration: none; color: var(--color-text-primary);
 }
-.nav-card-badge[hidden] { display: none; }
-.nav-card-chevron { color: var(--color-text-secondary); font-size: 18px; flex-shrink: 0; }
+.latest-card-icon {
+  width: 44px; height: 44px; border-radius: var(--radius-md); flex-shrink: 0;
+  background: var(--color-primary-100); display: flex; align-items: center; justify-content: center; font-size: 20px;
+}
+.latest-card-body { flex: 1; min-width: 0; }
+.latest-card-title { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.latest-card-meta { font-size: 12px; color: var(--color-text-secondary); }
+
+.status-pill {
+  display: inline-flex; align-items: center; font-size: 11px; font-weight: 700; flex-shrink: 0;
+  padding: 3px 10px; border-radius: var(--radius-full);
+}
+.status-pill.pending_admin_review { background: var(--color-accent-peach-100); color: #8A5A15; }
+.status-pill.open_for_saleng { background: #E3F0FB; color: #1F5C7A; }
+.status-pill.pending_match_confirm { background: var(--color-neutral-300); color: var(--color-text-secondary); }
+.status-pill.confirmed, .status-pill.completed { background: var(--color-primary-100); color: var(--color-primary-700); }
+.status-pill.cancelled { background: #FBEBE3; color: var(--color-danger); }
+
+.empty-note {
+  padding: 20px; text-align: center; font-size: 13px; color: var(--color-text-secondary);
+  background: var(--color-neutral-card); border: 1px dashed var(--color-neutral-300); border-radius: var(--radius-md);
+}
+.empty-note a { color: var(--color-primary-600); font-weight: 600; }

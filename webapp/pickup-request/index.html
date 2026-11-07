@@ -7,12 +7,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="../bottom-nav.css">
 </head>
 <!-- เปิดไฟล์นี้ตรงๆ (double-click) ได้เลย ไม่ต้องรัน server -->
-<body>
+<body data-nav="request">
 <div class="page">
   <div style="display:flex; align-items:center; gap:10px; margin-bottom:4px;">
-    <a href="../dashboard/index.html" style="text-decoration:none; color:var(--color-text-primary); font-size:20px; flex-shrink:0;">←</a>
     <h1 class="h1" id="pageTitle" style="margin-bottom:0; flex:1;">ส่งคำขอเรียกรถซาเล้ง</h1>
     <div id="userBar" style="font-size:13px; text-align:right; flex-shrink:0;"></div>
   </div>
@@ -129,6 +129,8 @@
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
 <script src="../firebase-config.js"></script>
+<script src="../notify-helpers.js"></script>
 <script src="app.js"></script>
+<script src="../bottom-nav.js"></script>
 </body>
 </html>
