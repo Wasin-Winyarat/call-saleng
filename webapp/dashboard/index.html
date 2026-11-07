@@ -21,6 +21,11 @@
     <a class="topbar-logout" href="#" id="logoutLink">ออกจากระบบ</a>
   </div>
 
+  <section class="banner-carousel" id="bannerCarousel" aria-label="ประชาสัมพันธ์" hidden>
+    <div class="banner-track" id="bannerTrack"></div>
+    <div class="banner-dots" id="bannerDots"></div>
+  </section>
+
   <a class="hero-cta" href="../pickup-request/index.html">
     <div class="hero-cta-body">
       <div class="hero-cta-title">เรียกรถซาเล้ง</div>
@@ -30,10 +35,10 @@
   </a>
 
   <div class="section-head">
-    <div class="section-title">คำขอล่าสุด</div>
+    <div class="section-title">คำขอที่กำลังดำเนินการ</div>
     <a class="section-link" href="../tracking/index.html">ดูทั้งหมด ›</a>
   </div>
-  <div id="latestRequests">
+  <div id="activeRequest">
     <div class="empty-note">กำลังโหลด...</div>
   </div>
 </div>
@@ -43,6 +48,8 @@
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
 <script src="../firebase-config.js"></script>
 <script src="../notify-helpers.js"></script>
+<script src="../image-helpers.js"></script>
+<script src="../banner-helpers.js"></script>
 <script src="app.js"></script>
 <script src="../bottom-nav.js"></script>
 </body>

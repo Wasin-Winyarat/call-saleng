@@ -86,6 +86,23 @@ service cloud.firestore {
       allow delete: if isOwner(resource.data.user_id);
     }
 
+    // Banner ประชาสัมพันธ์บนหน้าหลักของ user — admin จัดการที่ admin/banners/
+    // user ที่ login แล้วอ่านได้เฉพาะที่ status == 'active' (query ฝั่ง user ต้อง where status == 'active' ด้วย
+    // ไม่งั้น rule ตรวจไม่ได้และถูกปฏิเสธทั้ง query) — ช่วงวันที่ start/end_date กรองฝั่ง client
+    match /ad_banners/{bannerId} {
+      allow read: if isAdmin() ||
+        (request.auth != null && resource.data.status == 'active');
+
+      allow create, update: if isAdmin() &&
+        request.resource.data.title is string &&
+        request.resource.data.status in ['active', 'draft'] &&
+        request.resource.data.image_data is string &&
+        request.resource.data.image_data.matches('^data:image/jpeg;base64,.*') &&
+        request.resource.data.image_data.size() < 1000000;
+
+      allow delete: if isAdmin();
+    }
+
     match /chat_messages/{messageId} {
       // อ่านได้เฉพาะ admin หรือเจ้าของคำขอที่ผูกอยู่ (get() ใช้งานได้ปกติฝั่ง read — ทดสอบผ่านจริงแล้ว)
       allow read: if isAdmin() ||

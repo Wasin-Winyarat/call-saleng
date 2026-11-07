@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>จัดการ Banner — กรีนซาเล้ง</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../dashboard/styles.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+<!-- เปิดไฟล์นี้ตรงๆ (double-click) ได้เลย ไม่ต้องรัน server -->
+<body>
+<div class="page">
+  <div class="topbar">
+    <h1 class="h1">จัดการ Banner</h1>
+    <div id="adminBar" class="admin-bar"></div>
+  </div>
+  <div class="text-secondary" style="margin-bottom:16px;">
+    Banner ประชาสัมพันธ์ที่แสดงบนหน้าหลักของ user (collection <code>ad_banners</code>) — แสดงเฉพาะที่สถานะ "เผยแพร่" และอยู่ในช่วงวันที่กำหนด
+  </div>
+
+  <form class="banner-form" id="bannerForm" novalidate>
+    <div class="banner-form-title" id="formTitle">เพิ่ม Banner ใหม่</div>
+
+    <label class="banner-field">
+      <span>รูป Banner <span class="req">*</span> <span class="hint">(แนะนำสัดส่วน 2:1 เช่น 1200×600 — JPG / PNG / WEBP)</span></span>
+      <input type="file" id="bannerImageInput" accept="image/jpeg,image/png,image/webp">
+    </label>
+    <div class="banner-preview" id="bannerPreview" hidden><img id="bannerPreviewImg" alt="ตัวอย่าง banner"></div>
+
+    <label class="banner-field">
+      <span>หัวข้อ <span class="req">*</span> <span class="hint">(ใช้เป็นข้อความแทนรูปสำหรับโปรแกรมอ่านหน้าจอ)</span></span>
+      <input type="text" id="bannerTitle" maxlength="80" placeholder="เช่น รับซื้อขวด PET ราคาพิเศษ เดือนนี้เท่านั้น">
+    </label>
+
+    <label class="banner-field">
+      <span>ลิงก์เมื่อกด Banner <span class="hint">(ไม่บังคับ — https://... หรือหน้าในแอป)</span></span>
+      <select id="bannerLinkPreset">
+        <option value="">ไม่มีลิงก์</option>
+        <option value="../pickup-request/index.html">หน้าส่งคำร้อง</option>
+        <option value="../prices/index.html">หน้าราคาขยะ</option>
+        <option value="../tracking/index.html">หน้าติดตามคำขอ</option>
+        <option value="custom">ลิงก์ภายนอก (https://...)</option>
+      </select>
+      <input type="url" id="bannerLinkCustom" placeholder="https://..." hidden>
+    </label>
+
+    <div class="banner-field-row">
+      <label class="banner-field">
+        <span>เริ่มแสดง <span class="hint">(ไม่บังคับ)</span></span>
+        <input type="date" id="bannerStart">
+      </label>
+      <label class="banner-field">
+        <span>สิ้นสุด <span class="hint">(ไม่บังคับ)</span></span>
+        <input type="date" id="bannerEnd">
+      </label>
+    </div>
+
+    <label class="banner-check">
+      <input type="checkbox" id="bannerActive" checked> เผยแพร่ทันที (ไม่ติ๊ก = เก็บเป็นฉบับร่าง)
+    </label>
+
+    <div class="action-row">
+      <button type="submit" class="btn btn-primary" id="bannerSaveBtn" disabled>บันทึก Banner</button>
+      <button type="button" class="btn btn-secondary" id="bannerCancelEditBtn" hidden>ยกเลิกการแก้ไข</button>
+    </div>
+  </form>
+
+  <div class="banner-list-title">Banner ทั้งหมด <span class="hint">(เรียงตามลำดับที่แสดงบนหน้าหลัก)</span></div>
+  <div id="bannerList">
+    <div class="empty-note">กำลังโหลด...</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script src="../../firebase-config.js"></script>
+<script src="../../image-helpers.js"></script>
+<script src="../../banner-helpers.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

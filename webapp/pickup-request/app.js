@@ -14,10 +14,8 @@ const photoCount = document.getElementById("photoCount");
 const ADDRESS_SLOTS = ["address_1", "address_2"];
 
 // รูปถ่ายขยะเก็บเป็น base64 data URL ใน Firestore collection request_photos (1 รูป = 1 doc)
-// แทน Firebase Storage — doc ของ Firestore จำกัด 1 MiB จึงบีบอัดให้ data URL ยาวไม่เกินค่านี้ (~500KB ไฟล์จริง)
+// แทน Firebase Storage — ย่อ/บีบอัดด้วย compressImage() ใน image-helpers.js
 const MAX_PHOTOS = 5;
-const MAX_PHOTO_DATA_LENGTH = 700000;
-const ACCEPTED_PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 const editRequestId = new URLSearchParams(window.location.search).get("edit");
 
@@ -213,7 +211,7 @@ photoInput.addEventListener("change", async () => {
   if (files.length > room) showToast(`อัปโหลดได้สูงสุด ${MAX_PHOTOS} ภาพ`, true);
 
   for (const file of files.slice(0, Math.max(room, 0))) {
-    if (!ACCEPTED_PHOTO_TYPES.includes(file.type)) {
+    if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
       showToast(`ไฟล์ "${file.name}" ไม่รองรับ (ใช้ได้เฉพาะ JPG / PNG / WEBP)`, true);
       continue;
     }
@@ -232,40 +230,6 @@ photoInput.addEventListener("change", async () => {
     }
   }
 });
-
-function loadImage(file) {
-  return new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(file);
-    const img = new Image();
-    img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
-    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("decode failed")); };
-    img.src = url;
-  });
-}
-
-// ย่อด้านยาวสุดเหลือ 1280px แล้วลด quality/ขนาดลงเรื่อยๆ จนกว่า data URL จะไม่เกิน MAX_PHOTO_DATA_LENGTH
-async function compressImage(file) {
-  const img = await loadImage(file);
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
-  let maxSide = 1280;
-  let quality = 0.82;
-
-  while (true) {
-    const scale = Math.min(1, maxSide / Math.max(img.naturalWidth, img.naturalHeight));
-    canvas.width = Math.round(img.naturalWidth * scale);
-    canvas.height = Math.round(img.naturalHeight * scale);
-    ctx.fillStyle = "#fff"; // PNG โปร่งใส → พื้นขาวแทนพื้นดำตอนแปลงเป็น JPEG
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-    const dataUrl = canvas.toDataURL("image/jpeg", quality);
-    if (dataUrl.length <= MAX_PHOTO_DATA_LENGTH || maxSide <= 320) return dataUrl;
-
-    if (quality > 0.5) quality -= 0.1;
-    else maxSide = Math.round(maxSide * 0.75);
-  }
-}
 
 function renderPhotos() {
   photoGrid.innerHTML = "";

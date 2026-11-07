@@ -39,6 +39,8 @@ webapp/
   index.html            landing page (ปุ่ม login/register + admin corner สำหรับทดสอบ)
   firebase-config.js     Firebase compat SDK init (ใช้ร่วมทุกหน้า)
   auth-helpers.js         normalizePhone / phoneToEmail / adminIdToEmail
+  image-helpers.js        compressImage() ย่อรูปเป็น JPEG base64 ≤ 700k ตัวอักษร (รูปขยะ + banner) + SAFE_IMAGE_DATA
+  banner-helpers.js       isBannerLive / SAFE_BANNER_LINK ของ ad_banners (ใช้ทั้งหน้าหลัก user และ admin/banners/)
   bottom-nav.js/.css      แถบเมนูด้านล่างของหน้าฝั่ง user (mobile-first) — แต่ละหน้าใส่ <body data-nav="..."> + badge เมนู "ติดตาม"
   notify-helpers.js       badge แจ้งเตือนฝั่ง user (ข้อความใหม่จาก Admin / สถานะเปลี่ยน) — เก็บสถานะ "เห็นแล้ว" ใน localStorage
   shared-styles.css       CSS variable/tokens ที่ใช้ร่วมกัน
@@ -46,7 +48,7 @@ webapp/
   dashboard/              user home หลัง login
   pickup-request/         ฟอร์มสร้างคำขอเรียกรถซาเล้ง (เขียนลง Firestore collection pickup_requests)
   tracking/, prices/, profile/   หน้า user เพิ่มเติม
-  admin/                  admin login + admin/dashboard/ (accept/cancel/change-time, chat)
+  admin/                  admin login + admin/dashboard/ (accept/cancel/change-time, chat) + admin/banners/ (จัดการ banner หน้าหลัก user)
   seed/                   สคริปต์ seed ข้อมูลตัวอย่างลง Firestore สำหรับ dev/demo
 ```
 
@@ -67,9 +69,10 @@ webapp/
 | `admin_accounts` | `admin_account` |
 | `pickup_requests` | `pickup_request` |
 | `chat_messages` | `chat_message` |
+| `ad_banners` | `ad_banner` (เก็บรูปเป็น base64 ใน `image_data` แทน `image_reference`; `status` ใช้แค่ `active`/`draft` — `expired` คำนวณจาก `end_date` ตอนแสดงผล; `start_date`/`end_date` เป็น string `YYYY-MM-DD`; มี `link_url`, `display_order` เพิ่ม) |
 | `request_photos` | `request_photo` (เก็บรูปเป็น base64 JPEG data URL ใน field `image_data` แทน `file_reference` — ไม่ใช้ Firebase Storage, 1 รูป = 1 doc, บีบอัดฝั่ง client ให้ data URL ≤ 700,000 ตัวอักษรเพราะ doc จำกัด 1 MiB; มี `user_id` ซ้ำไว้เพื่อเช็กสิทธิ์ใน rules) |
 
-Collection อื่นที่มีอยู่ใน `database-schema.md` แต่**ยังไม่ implement**เป็นโค้ดจริง (นอกขอบเขต module ปัจจุบันตาม `SCOPE.md` — ฝั่งสาเล้ง/matching/ใบเสร็จ/ราคากลาง): `saleng_account`, `waste_type`, `waste_reference_price`, `pickup_request_waste_item`, `request_match`, `receipt`, `receipt_item`, `saleng_fee_ledger_entry`, `saleng_wallet_balance`, `membership_tier`, `ad_banner` — อย่าสมมติว่ามี collection เหล่านี้อยู่ใน Firestore จริงแล้ว ต้องสร้างตอน implement เท่านั้น
+Collection อื่นที่มีอยู่ใน `database-schema.md` แต่**ยังไม่ implement**เป็นโค้ดจริง (นอกขอบเขต module ปัจจุบันตาม `SCOPE.md` — ฝั่งสาเล้ง/matching/ใบเสร็จ/ราคากลาง): `saleng_account`, `waste_type`, `waste_reference_price`, `pickup_request_waste_item`, `request_match`, `receipt`, `receipt_item`, `saleng_fee_ledger_entry`, `saleng_wallet_balance`, `membership_tier` — อย่าสมมติว่ามี collection เหล่านี้อยู่ใน Firestore จริงแล้ว ต้องสร้างตอน implement เท่านั้น
 
 ### สถานะ (status) ของ `pickup_requests`
 

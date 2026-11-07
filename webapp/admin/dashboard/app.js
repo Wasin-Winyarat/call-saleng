@@ -92,7 +92,7 @@ auth.onAuthStateChanged(async (user) => {
 
     currentAdminUid = user.uid;
     currentAdminName = profileSnap.data().full_name;
-    adminBar.innerHTML = `สวัสดี <b>${escapeHtml(currentAdminName)}</b> · <a href="#" id="logoutLink">ออกจากระบบ</a>`;
+    adminBar.innerHTML = `<a href="../banners/index.html">🖼️ จัดการ Banner</a> · สวัสดี <b>${escapeHtml(currentAdminName)}</b> · <a href="#" id="logoutLink">ออกจากระบบ</a>`;
     document.getElementById("logoutLink").addEventListener("click", async (e) => {
       e.preventDefault();
       await auth.signOut();
@@ -279,9 +279,6 @@ function buildDetail(id, data) {
 // ---------- รูปถ่ายขยะที่ user แนบ (request_photos, base64 data URL) ----------
 // กรองเฉพาะรูปที่ user_id ตรงกับเจ้าของคำขอ — rule ฝั่ง create ไม่ได้เช็ก ownership ของ request_id ผ่าน get()
 // (ดูหมายเหตุใน firestore.rules) จึงกันไม่ให้รูปที่ user อื่นแนบผิด request_id มาโผล่ในคำขอนี้
-// image_data ถูกใส่ลง src ตรงๆ จึงรับเฉพาะ JPEG base64 ล้วน (กันค่าแปลกปลอมที่มี quote/HTML)
-const SAFE_PHOTO_DATA = /^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/;
-
 function buildRequestPhotos(id, data) {
   const row = document.createElement("div");
   row.className = "photo-row";
@@ -291,7 +288,7 @@ function buildRequestPhotos(id, data) {
     .then((snap) => {
       const docs = snap.docs
         .map((doc) => doc.data())
-        .filter((photo) => photo.user_id === data.user_id && SAFE_PHOTO_DATA.test(photo.image_data || ""))
+        .filter((photo) => photo.user_id === data.user_id && SAFE_IMAGE_DATA.test(photo.image_data || ""))
         .sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
       if (!docs.length) return;
 
