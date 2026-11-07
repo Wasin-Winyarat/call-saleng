@@ -252,6 +252,7 @@ function buildDetail(id, data) {
     <div class="detail-row"><b>user_id:</b> ${escapeHtml(data.user_id)}</div>
     ${photosHtml}
   `;
+  detail.appendChild(buildRequestPhotos(id, data));
 
   detail.appendChild(buildSummarizeOne(id, data));
 
@@ -274,6 +275,48 @@ function buildDetail(id, data) {
 
   detail.appendChild(buildChatSection(id));
   return detail;
+}
+
+// ---------- รูปถ่ายขยะที่ user แนบ (request_photos, base64 data URL) ----------
+// กรองเฉพาะรูปที่ user_id ตรงกับเจ้าของคำขอ — rule ฝั่ง create ไม่ได้เช็ก ownership ของ request_id ผ่าน get()
+// (ดูหมายเหตุใน firestore.rules) จึงกันไม่ให้รูปที่ user อื่นแนบผิด request_id มาโผล่ในคำขอนี้
+// image_data ถูกใส่ลง src ตรงๆ จึงรับเฉพาะ JPEG base64 ล้วน (กันค่าแปลกปลอมที่มี quote/HTML)
+const SAFE_PHOTO_DATA = /^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/;
+
+function buildRequestPhotos(id, data) {
+  const row = document.createElement("div");
+  row.className = "photo-row";
+  row.style.display = "none";
+
+  db.collection("request_photos").where("request_id", "==", id).get()
+    .then((snap) => {
+      const docs = snap.docs
+        .map((doc) => doc.data())
+        .filter((photo) => photo.user_id === data.user_id && SAFE_PHOTO_DATA.test(photo.image_data || ""))
+        .sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+      if (!docs.length) return;
+
+      docs.forEach((photo, index) => {
+        const thumb = document.createElement("button");
+        thumb.type = "button";
+        thumb.className = "photo-thumb";
+        thumb.innerHTML = `<img src="${photo.image_data}" alt="รูปถ่ายขยะ ${index + 1}">`;
+        thumb.addEventListener("click", () => openPhotoViewer(photo.image_data));
+        row.appendChild(thumb);
+      });
+      row.style.display = "";
+    })
+    .catch((err) => console.error("โหลดรูปถ่ายขยะไม่สำเร็จ", err));
+
+  return row;
+}
+
+function openPhotoViewer(src) {
+  const overlay = document.createElement("div");
+  overlay.className = "photo-viewer";
+  overlay.innerHTML = `<img src="${src}" alt="รูปถ่ายขยะ">`;
+  overlay.addEventListener("click", () => overlay.remove());
+  document.body.appendChild(overlay);
 }
 
 // ---------- แสดงผลสรุปของ AI แบบแยกบรรทัด "หัวข้อ: ค่า" ----------

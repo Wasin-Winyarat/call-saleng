@@ -7,7 +7,17 @@ const userBar = document.getElementById("userBar");
 const addressCardList = document.getElementById("addressCardList");
 const addressError = document.getElementById("addressError");
 
+const photoInput = document.getElementById("photoInput");
+const photoGrid = document.getElementById("photoGrid");
+const photoCount = document.getElementById("photoCount");
+
 const ADDRESS_SLOTS = ["address_1", "address_2"];
+
+// รูปถ่ายขยะเก็บเป็น base64 data URL ใน Firestore collection request_photos (1 รูป = 1 doc)
+// แทน Firebase Storage — doc ของ Firestore จำกัด 1 MiB จึงบีบอัดให้ data URL ยาวไม่เกินค่านี้ (~500KB ไฟล์จริง)
+const MAX_PHOTOS = 5;
+const MAX_PHOTO_DATA_LENGTH = 700000;
+const ACCEPTED_PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 const editRequestId = new URLSearchParams(window.location.search).get("edit");
 
@@ -15,6 +25,9 @@ let currentUserId = null;
 let currentProfile = null;
 let savedAddresses = { address_1: null, address_2: null }; // เก็บใน Firestore collection user_addresses/{uid} — จัดการ (เพิ่ม/แก้ไข) ที่หน้าโปรไฟล์
 let selectedSlot = null;
+let photos = []; // [{ id: doc id ใน request_photos (null = รูปใหม่ยังไม่บันทึก), data: data URL }]
+let removedPhotoIds = []; // รูปเดิมที่ผู้ใช้กดลบในโหมดแก้ไข — ลบจริงตอนกดบันทึก
+let processingPhotos = 0;
 
 // ---------- checkbox / radio visual state ----------
 wasteTypeGrid.querySelectorAll(".checkbox-item").forEach((item) => {
@@ -112,6 +125,16 @@ async function loadRequestForEdit() {
       selectedSlot = data.saved_address_id;
     }
 
+    const photoSnap = await db.collection("request_photos")
+      .where("request_id", "==", editRequestId)
+      .where("user_id", "==", currentUserId)
+      .get();
+    photos = photoSnap.docs
+      .map((doc) => ({ id: doc.id, data: doc.data().image_data, order: doc.data().display_order || 0 }))
+      .sort((a, b) => a.order - b.order)
+      .map(({ id, data }) => ({ id, data }));
+    renderPhotos();
+
     document.getElementById("pageTitle").textContent = "แก้ไขคำขอเรียกรถซาเล้ง";
     submitBtn.textContent = "บันทึกการแก้ไข";
     return true;
@@ -181,6 +204,113 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
+// ---------- รูปถ่ายขยะ: เลือก → ย่อ/บีบอัดเป็น JPEG ใน browser → เก็บ data URL ไว้ก่อน ส่งจริงตอน submit ----------
+photoInput.addEventListener("change", async () => {
+  const files = Array.from(photoInput.files);
+  photoInput.value = "";
+
+  const room = MAX_PHOTOS - photos.length - processingPhotos;
+  if (files.length > room) showToast(`อัปโหลดได้สูงสุด ${MAX_PHOTOS} ภาพ`, true);
+
+  for (const file of files.slice(0, Math.max(room, 0))) {
+    if (!ACCEPTED_PHOTO_TYPES.includes(file.type)) {
+      showToast(`ไฟล์ "${file.name}" ไม่รองรับ (ใช้ได้เฉพาะ JPG / PNG / WEBP)`, true);
+      continue;
+    }
+
+    processingPhotos++;
+    renderPhotos();
+    try {
+      photos.push({ id: null, data: await compressImage(file) });
+    } catch (err) {
+      console.error(err);
+      showToast(`อ่านรูป "${file.name}" ไม่สำเร็จ`, true);
+    } finally {
+      processingPhotos--;
+      renderPhotos();
+      validate();
+    }
+  }
+});
+
+function loadImage(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("decode failed")); };
+    img.src = url;
+  });
+}
+
+// ย่อด้านยาวสุดเหลือ 1280px แล้วลด quality/ขนาดลงเรื่อยๆ จนกว่า data URL จะไม่เกิน MAX_PHOTO_DATA_LENGTH
+async function compressImage(file) {
+  const img = await loadImage(file);
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  let maxSide = 1280;
+  let quality = 0.82;
+
+  while (true) {
+    const scale = Math.min(1, maxSide / Math.max(img.naturalWidth, img.naturalHeight));
+    canvas.width = Math.round(img.naturalWidth * scale);
+    canvas.height = Math.round(img.naturalHeight * scale);
+    ctx.fillStyle = "#fff"; // PNG โปร่งใส → พื้นขาวแทนพื้นดำตอนแปลงเป็น JPEG
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+    const dataUrl = canvas.toDataURL("image/jpeg", quality);
+    if (dataUrl.length <= MAX_PHOTO_DATA_LENGTH || maxSide <= 320) return dataUrl;
+
+    if (quality > 0.5) quality -= 0.1;
+    else maxSide = Math.round(maxSide * 0.75);
+  }
+}
+
+function renderPhotos() {
+  photoGrid.innerHTML = "";
+  photos.forEach((photo, index) => {
+    const tile = document.createElement("div");
+    tile.className = "photo-tile";
+    tile.innerHTML = `<img src="${photo.data}" alt="รูปถ่ายขยะ ${index + 1}"><button type="button" class="photo-remove" aria-label="ลบรูป">×</button>`;
+    tile.querySelector(".photo-remove").addEventListener("click", () => {
+      if (photo.id) removedPhotoIds.push(photo.id);
+      photos.splice(index, 1);
+      renderPhotos();
+    });
+    photoGrid.appendChild(tile);
+  });
+
+  for (let i = 0; i < processingPhotos; i++) {
+    const tile = document.createElement("div");
+    tile.className = "photo-tile processing";
+    tile.textContent = "กำลังย่อ...";
+    photoGrid.appendChild(tile);
+  }
+
+  photoCount.textContent = `${photos.length}/${MAX_PHOTOS}`;
+  photoInput.disabled = photos.length + processingPhotos >= MAX_PHOTOS;
+}
+
+// ลบรูปที่ผู้ใช้เอาออก + เพิ่มรูปใหม่ ใน batch เดียว (เขียน display_order ตามลำดับปัจจุบันให้รูปใหม่)
+async function savePhotos(requestId) {
+  if (!removedPhotoIds.length && !photos.some((p) => !p.id)) return;
+
+  const batch = db.batch();
+  removedPhotoIds.forEach((id) => batch.delete(db.collection("request_photos").doc(id)));
+  photos.forEach((photo, index) => {
+    if (photo.id) return;
+    batch.set(db.collection("request_photos").doc(), {
+      request_id: requestId,
+      user_id: currentUserId,
+      image_data: photo.data,
+      display_order: index,
+      uploaded_at: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+  });
+  await batch.commit();
+}
+
 // ---------- validation ----------
 function fieldValue(id) {
   return document.getElementById(id).value.trim();
@@ -216,7 +346,7 @@ function validate(showErrors = false) {
     addressError.style.display = hasAddress ? "none" : "block";
   }
 
-  const allValid = checks.every(([, ok]) => ok) && hasAddress && !!currentUserId;
+  const allValid = checks.every(([, ok]) => ok) && hasAddress && !!currentUserId && processingPhotos === 0;
   submitBtn.disabled = !allValid;
   return allValid;
 }
@@ -260,17 +390,29 @@ form.addEventListener("submit", async (e) => {
 
     if (editRequestId) {
       await db.collection("pickup_requests").doc(editRequestId).update(payload);
+      await savePhotos(editRequestId);
       showToast("บันทึกการแก้ไขสำเร็จ");
       window.location.href = "../tracking/index.html";
       return;
     }
 
-    await db.collection("pickup_requests").doc().set({
+    const requestRef = db.collection("pickup_requests").doc();
+    await requestRef.set({
       ...payload,
       user_id: currentUserId,
       status: "pending_admin_review",
       created_at: firebase.firestore.FieldValue.serverTimestamp(),
     });
+
+    try {
+      await savePhotos(requestRef.id);
+    } catch (err) {
+      // คำขอถูกสร้างแล้ว — แจ้งแยกให้ผู้ใช้ไปแนบรูปใหม่ผ่าน "แก้ไข" ในหน้าติดตาม แทนที่จะบอกว่าส่งคำขอไม่สำเร็จ
+      console.error(err);
+      showToast("ส่งคำขอสำเร็จ แต่อัปโหลดรูปไม่สำเร็จ — แนบรูปใหม่ได้จากปุ่มแก้ไขในหน้าติดตาม", true);
+      resetForm();
+      return;
+    }
 
     showToast("ส่งคำขอสำเร็จ");
     resetForm();
@@ -298,6 +440,9 @@ function resetForm() {
     item.querySelector("input").checked = false;
   });
   document.getElementById("requested_date").value = "";
+  photos = [];
+  removedPhotoIds = [];
+  renderPhotos();
   form.querySelectorAll(".field").forEach((f) => f.classList.remove("has-error"));
   validate();
 }

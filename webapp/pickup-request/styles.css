@@ -117,6 +117,17 @@ h1.h1 { font-size: 24px; font-weight: 700; margin: 0 0 4px; }
 }
 .field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: var(--color-primary-600); }
 .field .hint { font-size: 12px; color: var(--color-text-secondary); margin-top: 6px; }
+.photo-count { font-weight: 400; color: var(--color-text-secondary); margin-left: 4px; }
+.photo-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 8px; }
+.photo-grid:empty { display: none; }
+.photo-tile { position: relative; aspect-ratio: 1; border-radius: var(--radius-sm); overflow: hidden; background: var(--color-neutral-300); }
+.photo-tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.photo-tile.processing { display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--color-text-secondary); }
+.photo-remove {
+  position: absolute; top: 3px; right: 3px; width: 22px; height: 22px; border: none; border-radius: var(--radius-full);
+  background: rgba(0, 0, 0, .55); color: #fff; font-size: 14px; line-height: 1; cursor: pointer;
+}
+
 .field .error-text { font-size: 12px; color: var(--color-danger); margin-top: 6px; display: none; }
 .field.has-error input, .field.has-error select, .field.has-error textarea { border-color: var(--color-danger); }
 .field.has-error .error-text { display: block; }

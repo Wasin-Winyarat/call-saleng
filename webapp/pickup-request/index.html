@@ -84,10 +84,11 @@
         </select>
       </div>
 
-      <div class="field" style="margin-bottom:0; opacity:.55;">
-        <label>รูปถ่ายขยะ (ไม่บังคับ สูงสุด 5 รูป)</label>
-        <input type="file" accept="image/*" multiple disabled>
-        <div class="hint">🚧 ยังใช้งานไม่ได้ — รอสร้าง database สำหรับเก็บภาพ (เร็วๆนี้)</div>
+      <div class="field" style="margin-bottom:0;">
+        <label for="photoInput">รูปถ่ายขยะ (ไม่บังคับ สูงสุด 5 รูป) <span class="photo-count" id="photoCount">0/5</span></label>
+        <div class="photo-grid" id="photoGrid"></div>
+        <input type="file" id="photoInput" accept="image/jpeg,image/png,image/webp" multiple>
+        <div class="hint">รองรับ JPG / PNG / WEBP — ระบบย่อและบีบอัดรูปให้อัตโนมัติก่อนส่ง</div>
       </div>
     </div>
 

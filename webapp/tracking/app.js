@@ -104,7 +104,15 @@ function buildOwnerActions(id) {
   row.querySelector(`#delete-request-${id}`).addEventListener("click", async () => {
     if (!window.confirm("ลบคำขอนี้? การลบไม่สามารถย้อนกลับได้")) return;
     try {
-      await db.collection("pickup_requests").doc(id).delete();
+      // ลบรูปถ่ายขยะที่แนบไว้ (request_photos) ก่อน แล้วค่อยลบตัวคำขอ ใน batch เดียวกัน
+      const photoSnap = await db.collection("request_photos")
+        .where("request_id", "==", id)
+        .where("user_id", "==", auth.currentUser.uid)
+        .get();
+      const batch = db.batch();
+      photoSnap.docs.forEach((doc) => batch.delete(doc.ref));
+      batch.delete(db.collection("pickup_requests").doc(id));
+      await batch.commit();
       showToast("ลบคำขอแล้ว");
     } catch (err) {
       console.error(err);

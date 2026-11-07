@@ -66,6 +66,26 @@ service cloud.firestore {
       }
     }
 
+    // รูปถ่ายขยะแนบคำขอ — เก็บเป็น base64 data URL ใน Firestore (1 รูป = 1 doc) แทน Firebase Storage
+    // เก็บ user_id ซ้ำไว้ใน doc เพื่อเช็กสิทธิ์โดยไม่ต้อง get() pickup_request (ปัญหาเดียวกับ chat_messages ข้างล่าง)
+    // ช่องโหว่ที่เหลือแบบเดียวกับแชท: user อาจแนบรูปกับ request_id ของคนอื่นได้ แต่ admin dashboard
+    // แสดงเฉพาะรูปที่ user_id ตรงกับเจ้าของคำขอ และจำนวนสูงสุด 5 รูปบังคับฝั่ง client เท่านั้น
+    match /request_photos/{photoId} {
+      allow read: if isAdmin() || isOwner(resource.data.user_id);
+
+      allow create: if isOwner(request.resource.data.user_id) &&
+        request.resource.data.request_id is string &&
+        request.resource.data.image_data is string &&
+        request.resource.data.image_data.matches('^data:image/jpeg;base64,.*') &&
+        request.resource.data.image_data.size() < 1000000 &&
+        request.resource.data.display_order is int &&
+        request.resource.data.display_order >= 0 &&
+        request.resource.data.display_order < 5;
+
+      allow update: if false;
+      allow delete: if isOwner(resource.data.user_id);
+    }
+
     match /chat_messages/{messageId} {
       // อ่านได้เฉพาะ admin หรือเจ้าของคำขอที่ผูกอยู่ (get() ใช้งานได้ปกติฝั่ง read — ทดสอบผ่านจริงแล้ว)
       allow read: if isAdmin() ||

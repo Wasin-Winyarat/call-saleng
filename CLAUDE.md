@@ -65,8 +65,9 @@ webapp/
 | `admin_accounts` | `admin_account` |
 | `pickup_requests` | `pickup_request` |
 | `chat_messages` | `chat_message` |
+| `request_photos` | `request_photo` (เก็บรูปเป็น base64 JPEG data URL ใน field `image_data` แทน `file_reference` — ไม่ใช้ Firebase Storage, 1 รูป = 1 doc, บีบอัดฝั่ง client ให้ data URL ≤ 700,000 ตัวอักษรเพราะ doc จำกัด 1 MiB; มี `user_id` ซ้ำไว้เพื่อเช็กสิทธิ์ใน rules) |
 
-Collection อื่นที่มีอยู่ใน `database-schema.md` แต่**ยังไม่ implement**เป็นโค้ดจริง (นอกขอบเขต module ปัจจุบันตาม `SCOPE.md` — ฝั่งสาเล้ง/matching/ใบเสร็จ/ราคากลาง): `saleng_account`, `waste_type`, `waste_reference_price`, `pickup_request_waste_item`, `request_photo`, `request_match`, `receipt`, `receipt_item`, `saleng_fee_ledger_entry`, `saleng_wallet_balance`, `membership_tier`, `ad_banner` — อย่าสมมติว่ามี collection เหล่านี้อยู่ใน Firestore จริงแล้ว ต้องสร้างตอน implement เท่านั้น
+Collection อื่นที่มีอยู่ใน `database-schema.md` แต่**ยังไม่ implement**เป็นโค้ดจริง (นอกขอบเขต module ปัจจุบันตาม `SCOPE.md` — ฝั่งสาเล้ง/matching/ใบเสร็จ/ราคากลาง): `saleng_account`, `waste_type`, `waste_reference_price`, `pickup_request_waste_item`, `request_match`, `receipt`, `receipt_item`, `saleng_fee_ledger_entry`, `saleng_wallet_balance`, `membership_tier`, `ad_banner` — อย่าสมมติว่ามี collection เหล่านี้อยู่ใน Firestore จริงแล้ว ต้องสร้างตอน implement เท่านั้น
 
 ### สถานะ (status) ของ `pickup_requests`
 
