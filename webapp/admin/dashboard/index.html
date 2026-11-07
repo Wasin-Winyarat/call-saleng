@@ -17,6 +17,8 @@
   </div>
   <div class="text-secondary" style="margin-bottom:16px;">รายการคำขอเรียกรถซาเล้งทั้งหมด (real-time จาก Firestore)</div>
 
+  <button type="button" class="unread-summary" id="unreadSummary" hidden></button>
+
   <div class="chip-row" id="filterRow">
     <div class="chip" data-status="pending_admin_review">รอตรวจสอบ</div>
     <div class="chip" data-status="open_for_saleng">เปิดให้สาเล้งรับงาน</div>
@@ -65,6 +67,7 @@
 <script src="../../firebase-config.js"></script>
 <script src="../../ai-config.js"></script>
 <script src="../../ai-helpers.js"></script>
+<script src="../../notify-helpers.js"></script>
 <script src="../../image-helpers.js"></script>
 <script src="app.js"></script>
 </body>

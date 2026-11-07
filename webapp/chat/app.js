@@ -1,7 +1,16 @@
 // หน้าแชทกับ Admin แยกต่อคำขอ (?id=<pickup_request id>) — chat_messages ที่ request_id ตรงกัน (sender_role: "user")
 // เปิดหน้านี้อยู่ = อ่านข้อความแล้ว (อัปเดตสถานะ "เห็นแล้ว" ใน notify-helpers.js ทุกครั้งที่มีข้อความใหม่)
 
-const requestId = new URLSearchParams(window.location.search).get("id");
+const params = new URLSearchParams(window.location.search);
+const requestId = params.get("id");
+
+// ?draft=edit|cancel มาจากปุ่มแก้ไข/ยกเลิกในหน้ารายละเอียด (คำขอที่ Admin ยืนยันแล้ว แก้เองไม่ได้)
+// → เติมข้อความร่างให้ user เขียนต่อแล้วกดส่งเอง (ไม่ส่งอัตโนมัติ) — รับเฉพาะ key ที่กำหนดไว้ ไม่รับข้อความจาก URL ตรงๆ
+const DRAFT_MESSAGES = {
+  edit: "ขอแก้ไขคำขอนี้: ",
+  cancel: "ขอยกเลิกคำขอนี้ เนื่องจาก ",
+};
+const draftMessage = DRAFT_MESSAGES[params.get("draft")] || "";
 const chatThread = document.getElementById("chatThread");
 const chatForm = document.getElementById("chatForm");
 const chatInput = document.getElementById("chatInput");
@@ -59,6 +68,13 @@ auth.onAuthStateChanged(async (user) => {
   }
 
   chatInput.disabled = false;
+  if (draftMessage) {
+    chatInput.value = draftMessage;
+    chatInput.focus();
+    chatInput.setSelectionRange(draftMessage.length, draftMessage.length);
+    // ล้าง ?draft ออกจาก URL — กด back แล้วกลับมาหน้านี้จะไม่เติมข้อความซ้ำ
+    window.history.replaceState(null, "", `?id=${encodeURIComponent(requestId)}`);
+  }
   updateSendState();
   subscribeMessages();
 });

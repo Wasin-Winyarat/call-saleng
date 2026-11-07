@@ -146,12 +146,49 @@ function renderActiveRequest(data, othersCount) {
       ${progressStepsHtml(data.status)}
       <div class="active-card-hint">${escapeHtml(STATUS_HINT[data.status] || "")}</div>
       <div class="active-card-actions">
-        <a class="btn-outline" href="${chatUrl(data.id)}">💬 แชทกับ Admin</a>
+        <a class="btn-outline" id="activeChatBtn" href="${chatUrl(data.id)}">
+          <span class="btn-icon" aria-hidden="true">💬<span class="unread-dot" id="activeChatBadge" hidden></span></span>
+          แชทกับ Admin
+        </a>
         <a class="btn-solid" href="${detailUrl(data.id)}">ดูรายละเอียด</a>
       </div>
     </div>
     ${othersCount > 0 ? `<a class="active-more" href="../tracking/index.html">+ อีก ${othersCount} คำขอที่กำลังดำเนินการ ›</a>` : ""}
   `;
+
+  subscribeActiveChat(data.id);
+}
+
+// ---------- จุดแจ้งเตือนข้อความใหม่จาก Admin บนปุ่ม "แชทกับ Admin" ของการ์ดด้านบน ----------
+let activeChatId = null;
+let stopActiveChat = () => {};
+let activeChatMessages = [];
+
+function subscribeActiveChat(requestId) {
+  if (requestId === activeChatId) {
+    renderActiveChatBadge(); // การ์ดถูกวาดใหม่ — ใส่ badge กลับจากข้อความที่โหลดไว้แล้ว
+    return;
+  }
+  stopActiveChat();
+  activeChatId = requestId;
+  activeChatMessages = [];
+  stopActiveChat = db.collection("chat_messages")
+    .where("request_id", "==", requestId)
+    .onSnapshot((snapshot) => {
+      activeChatMessages = snapshot.docs.map((docSnap) => docSnap.data());
+      renderActiveChatBadge();
+    }, (err) => console.error("โหลดแชทไม่สำเร็จ", err));
+}
+
+function renderActiveChatBadge() {
+  const badge = document.getElementById("activeChatBadge");
+  const button = document.getElementById("activeChatBtn");
+  if (!badge || !auth.currentUser) return;
+  const unread = countUnreadAdminMessages(loadSeenState(auth.currentUser.uid), activeChatId, activeChatMessages);
+  badge.textContent = unread > 9 ? "9+" : unread;
+  badge.hidden = unread === 0;
+  button.classList.toggle("has-new", unread > 0);
+  button.setAttribute("aria-label", unread ? `แชทกับ Admin, ข้อความใหม่ ${unread} ข้อความ` : "แชทกับ Admin");
 }
 
 logoutLink.addEventListener("click", async (e) => {

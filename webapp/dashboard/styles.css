@@ -107,6 +107,17 @@ body {
   font-size: 14px; font-weight: 600; text-decoration: none;
 }
 .btn-outline { border: 1.5px solid var(--color-primary-600); color: var(--color-primary-600); }
+.active-card-actions a.btn-outline { display: flex; align-items: center; justify-content: center; gap: 12px; }
+.btn-outline.has-new { background: var(--color-primary-100); }
+.btn-icon { position: relative; display: inline-flex; font-size: 16px; }
+
+/* จุดแจ้งเตือนแบบแอปมือถือ: วงกลมแดง + ขอบขาว เกาะมุมขวาบนของไอคอน (แบบเดียวกับหน้ารายละเอียดคำขอ) */
+.unread-dot {
+  position: absolute; top: -8px; right: -10px; min-width: 18px; height: 18px; padding: 0 4px;
+  border-radius: var(--radius-full); border: 2px solid #fff; box-sizing: border-box;
+  background: var(--color-danger); color: #fff; font-size: 10px; font-weight: 700; line-height: 14px; text-align: center;
+}
+.unread-dot[hidden] { display: none; }
 .btn-solid { background: var(--color-primary-600); color: #fff; }
 .active-more { display: block; margin-top: 10px; text-align: center; font-size: 13px; font-weight: 600; color: var(--color-primary-600); text-decoration: none; }
 

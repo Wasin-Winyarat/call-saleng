@@ -112,13 +112,13 @@ function render() {
       <div style="${isCancelled ? "margin-top:12px;" : ""}">${hint}</div>
     </div>
 
-    <a class="chat-cta" href="${chatUrl(requestId)}">
+    <a class="chat-cta" id="chatCta" href="${chatUrl(requestId)}">
+      <span class="chat-cta-icon" aria-hidden="true">💬<span class="unread-dot" id="chatBadge" hidden></span></span>
       <div class="chat-cta-body">
-        <div class="chat-cta-title">💬 แชทกับ Admin</div>
-        <div class="chat-cta-desc">สอบถามหรือแจ้งข้อมูลเพิ่มเติมเกี่ยวกับคำขอนี้</div>
+        <div class="chat-cta-title">แชทกับ Admin</div>
+        <div class="chat-cta-desc" id="chatCtaDesc">สอบถามหรือแจ้งข้อมูลเพิ่มเติมเกี่ยวกับคำขอนี้</div>
       </div>
-      <span class="count-badge" id="chatBadge" hidden></span>
-      <span aria-hidden="true">›</span>
+      <span class="chat-cta-chevron" aria-hidden="true">›</span>
     </a>
 
     <div class="detail-card">
@@ -140,29 +140,61 @@ function render() {
         <div class="photo-grid">${photos.map((_, i) => `<button type="button" data-photo="${i}" aria-label="ดูรูปที่ ${i + 1}"><img src="${photos[i]}" alt=""></button>`).join("")}</div>
       </div>` : ""}
 
-    ${data.status === "pending_admin_review" ? `
-      <div class="action-row">
-        <a class="btn btn-edit" href="../pickup-request/index.html?edit=${encodeURIComponent(requestId)}">✏️ แก้ไขคำขอ</a>
-        <button type="button" class="btn btn-danger" id="deleteBtn">🗑️ ลบคำขอ</button>
-      </div>` : ""}
+    ${ownerActionsHtml(data.status)}
   `;
 
   detail.querySelectorAll("[data-photo]").forEach((btn) => {
     btn.addEventListener("click", () => openPhotoViewer(photos[Number(btn.dataset.photo)]));
   });
 
+  const editBtn = document.getElementById("editBtn");
   const deleteBtn = document.getElementById("deleteBtn");
-  if (deleteBtn) deleteBtn.addEventListener("click", deleteRequest);
+  if (editBtn) editBtn.addEventListener("click", () => handleOwnerAction("edit"));
+  if (deleteBtn) deleteBtn.addEventListener("click", () => handleOwnerAction("cancel"));
 
   renderChatBadge();
 }
 
+// ---------- แก้ไข/ลบคำขอ ----------
+// รอ Admin ตรวจสอบ → แก้ไข/ลบเองได้ทันที (rules อนุญาตเฉพาะสถานะนี้)
+// Admin ยืนยันแล้ว (ยังไม่จบงาน) → ปุ่มเดิม แต่พาไปหน้าแชทพร้อมข้อความร่าง ให้ Admin เป็นผู้แก้ไข/ยกเลิกให้
+// ยกเลิกแล้ว/เสร็จสิ้น → ไม่มีปุ่ม (ไม่มีอะไรให้แก้)
+function ownerActionsHtml(status) {
+  if (FINISHED_STATUSES.includes(status)) return "";
+  const viaAdmin = status !== "pending_admin_review";
+  return `
+    <div class="action-row">
+      <button type="button" class="btn btn-edit" id="editBtn">✏️ แก้ไขคำขอ</button>
+      <button type="button" class="btn btn-danger" id="deleteBtn">🗑️ ${viaAdmin ? "ยกเลิกคำขอ" : "ลบคำขอ"}</button>
+    </div>
+    ${viaAdmin ? '<div class="owner-actions-note">Admin ยืนยันคำขอนี้แล้ว — การแก้ไขหรือยกเลิกจะส่งเป็นข้อความถึง Admin ให้ดำเนินการให้</div>' : ""}
+  `;
+}
+
+function handleOwnerAction(action) {
+  if (currentData.status === "pending_admin_review") {
+    if (action === "edit") window.location.href = `../pickup-request/index.html?edit=${encodeURIComponent(requestId)}`;
+    else deleteRequest();
+    return;
+  }
+
+  const what = action === "edit" ? "แก้ไข" : "ยกเลิก";
+  if (!window.confirm(`คำขอนี้ Admin ยืนยันแล้ว จึง${what}เองไม่ได้\nต้องการส่งข้อความแจ้ง Admin ให้${what}ให้หรือไม่?`)) return;
+  window.location.href = `${chatUrl(requestId)}&draft=${action}`;
+}
+
+// มีข้อความใหม่ → จุดแดงพร้อมตัวเลขที่มุมไอคอน + เปลี่ยนคำอธิบายเป็นจำนวนข้อความใหม่
 function renderChatBadge() {
   const badge = document.getElementById("chatBadge");
   if (!badge || !currentUserId) return;
   const unread = countUnreadAdminMessages(loadSeenState(currentUserId), requestId, chatMessages);
-  badge.textContent = unread;
+  badge.textContent = unread > 9 ? "9+" : unread;
   badge.hidden = unread === 0;
+  document.getElementById("chatCta").classList.toggle("has-new", unread > 0);
+  document.getElementById("chatCtaDesc").textContent = unread
+    ? `มีข้อความใหม่จาก Admin ${unread} ข้อความ`
+    : "สอบถามหรือแจ้งข้อมูลเพิ่มเติมเกี่ยวกับคำขอนี้";
+  document.getElementById("chatCta").setAttribute("aria-label", unread ? `แชทกับ Admin, ข้อความใหม่ ${unread} ข้อความ` : "แชทกับ Admin");
 }
 
 function openPhotoViewer(src) {

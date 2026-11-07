@@ -1,4 +1,5 @@
-// Badge แจ้งเตือนฝั่ง user: ข้อความใหม่จาก Admin + สถานะคำขอที่เปลี่ยนไปตั้งแต่เปิดดูครั้งล่าสุด
+// Badge แจ้งเตือน — ฝั่ง user: ข้อความใหม่จาก Admin + สถานะคำขอที่เปลี่ยนไปตั้งแต่เปิดดูครั้งล่าสุด
+// ฝั่ง admin (admin/dashboard): ข้อความใหม่จากลูกค้า (ใช้ key แยกตาม uid ของ admin)
 // เก็บ "เห็นแล้วถึงตรงไหน" ไว้ใน localStorage ของ browser (แยกตาม uid) — ไม่เพิ่ม collection/field ใน Firestore
 // ข้อจำกัด: สถานะ "อ่านแล้ว" ไม่ sync ข้ามเครื่อง/browser (เปิดเครื่องใหม่จะเห็น badge ของข้อความเก่าอีกรอบ)
 
@@ -37,10 +38,15 @@ function messageMillis(msg) {
   return msg.sent_at && msg.sent_at.toMillis ? msg.sent_at.toMillis() : 0;
 }
 
-// messages = array ของ data จาก chat_messages ของคำขอนั้น
-function countUnreadAdminMessages(seen, requestId, messages) {
+// messages = array ของ data จาก chat_messages ของคำขอนั้น, fromRole = ฝั่งที่ส่งมาหาเรา ("admin" หรือ "user")
+function countUnreadMessages(seen, requestId, messages, fromRole) {
   const lastSeen = seen.chat[requestId] || 0;
-  return messages.filter((msg) => msg.sender_role === "admin" && messageMillis(msg) > lastSeen).length;
+  return messages.filter((msg) => msg.sender_role === fromRole && messageMillis(msg) > lastSeen).length;
+}
+
+// ฝั่ง user: ข้อความใหม่จาก Admin
+function countUnreadAdminMessages(seen, requestId, messages) {
+  return countUnreadMessages(seen, requestId, messages, "admin");
 }
 
 function latestMessageMillis(messages) {

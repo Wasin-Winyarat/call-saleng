@@ -21,6 +21,7 @@ const modalReasonDropdown = document.getElementById("modalReasonDropdown");
 const modalDraftReasonBtn = document.getElementById("modalDraftReasonBtn");
 const summarizeAllBtn = document.getElementById("summarizeAllBtn");
 const summarizeAllResult = document.getElementById("summarizeAllResult");
+const unreadSummary = document.getElementById("unreadSummary");
 
 let currentAdminUid = null;
 let currentAdminName = "";
@@ -29,7 +30,9 @@ let unsubscribeRequests = null;
 let pendingAction = null;
 let lastLoadedRequests = [];
 const openCards = new Set();
-const subscribedChats = new Set();
+const chatCache = new Map(); // requestId → ข้อความทั้งหมดของคำขอนั้น (จาก listener เดียวของ chat_messages)
+let adminSeen = null; // สถานะ "อ่านแล้ว" ของ admin คนนี้ (notify-helpers.js, แยกตาม uid)
+const BASE_TITLE = document.title;
 
 // ---------- AI helpers: สรุปข้อมูลคำขอ 1 รายการให้กระชับสำหรับ prompt ----------
 function requestToAiContext(data) {
@@ -54,7 +57,7 @@ async function logAiCall(requestId, type, input, output) {
       type,
       input,
       output,
-      model: window.OPENROUTER_CONFIG.model,
+      model: getAiConfig().model,
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     });
   } catch (err) {
@@ -92,14 +95,20 @@ auth.onAuthStateChanged(async (user) => {
 
     currentAdminUid = user.uid;
     currentAdminName = profileSnap.data().full_name;
-    adminBar.innerHTML = `<a href="../banners/index.html">🖼️ จัดการ Banner</a> · สวัสดี <b>${escapeHtml(currentAdminName)}</b> · <a href="#" id="logoutLink">ออกจากระบบ</a>`;
+    adminBar.innerHTML = `<a href="../banners/index.html">🖼️ จัดการ Banner</a> · <a href="#" id="aiSettingsLink">⚙️ ตั้งค่า AI</a> · สวัสดี <b>${escapeHtml(currentAdminName)}</b> · <a href="#" id="logoutLink">ออกจากระบบ</a>`;
+    document.getElementById("aiSettingsLink").addEventListener("click", (e) => {
+      e.preventDefault();
+      openAiSettings();
+    });
     document.getElementById("logoutLink").addEventListener("click", async (e) => {
       e.preventDefault();
       await auth.signOut();
       window.location.href = "../index.html";
     });
 
+    adminSeen = loadSeenState(currentAdminUid);
     subscribeRequests();
+    subscribeAllChats();
   } catch (err) {
     console.error(err);
     showToast("โหลดข้อมูล admin ไม่สำเร็จ", true);
@@ -209,7 +218,10 @@ function renderRequestCard(id, data) {
   headerBody.innerHTML = `
     <div class="request-card-title">${escapeHtml(data.contact_name)} · ${escapeHtml(data.contact_phone)}</div>
     <div class="request-card-meta">${escapeHtml((data.waste_types || []).join(", "))} · ${escapeHtml(data.sub_district)} · นัด ${escapeHtml(data.requested_date)} ${escapeHtml(data.time_slot)}</div>
-    <div class="status-pill ${data.status}">${STATUS_LABEL[data.status] || data.status}</div>
+    <div class="status-row">
+      <div class="status-pill ${data.status}">${STATUS_LABEL[data.status] || data.status}</div>
+      <span class="chat-unread" id="chat-unread-${id}" hidden></span>
+    </div>
   `;
 
   const chevron = document.createElement("div");
@@ -223,7 +235,7 @@ function renderRequestCard(id, data) {
     card.classList.toggle("open");
     if (card.classList.contains("open")) {
       openCards.add(id);
-      subscribeChat(id);
+      renderChat(id);
     } else {
       openCards.delete(id);
     }
@@ -232,7 +244,11 @@ function renderRequestCard(id, data) {
   card.appendChild(header);
   card.appendChild(buildDetail(id, data));
 
-  if (openCards.has(id)) subscribeChat(id);
+  // วาดแชท/badge จาก cache ทันทีหลังการ์ดเข้า DOM (การ์ดถูกสร้างใหม่ทุกครั้งที่รายการคำขอเปลี่ยน)
+  setTimeout(() => {
+    if (openCards.has(id)) renderChat(id);
+    updateChatBadges();
+  }, 0);
 
   return card;
 }
@@ -609,32 +625,98 @@ function buildChatSection(requestId) {
   return wrap;
 }
 
-function subscribeChat(requestId) {
-  if (subscribedChats.has(requestId)) return;
-  subscribedChats.add(requestId);
+// ---------- ข้อความทั้งหมด (listener เดียว) → แสดงในการ์ดที่เปิดอยู่ + badge ข้อความใหม่จากลูกค้า ----------
+function subscribeAllChats() {
+  db.collection("chat_messages")
+    .orderBy("sent_at", "asc")
+    .onSnapshot((snapshot) => {
+      chatCache.clear();
+      snapshot.forEach((docSnap) => {
+        const msg = docSnap.data();
+        if (!chatCache.has(msg.request_id)) chatCache.set(msg.request_id, []);
+        chatCache.get(msg.request_id).push(msg);
+      });
+      openCards.forEach((id) => renderChat(id));
+      updateChatBadges();
+    }, (err) => console.error("โหลดแชทไม่สำเร็จ", err));
+}
 
-  const chatQuery = db.collection("chat_messages")
-    .where("request_id", "==", requestId)
-    .orderBy("sent_at", "asc");
+function renderChat(requestId) {
+  const container = document.getElementById(`chat-messages-${requestId}`);
+  const messages = chatCache.get(requestId) || [];
 
-  chatQuery.onSnapshot((snapshot) => {
-    const container = document.getElementById(`chat-messages-${requestId}`);
-    if (!container) return;
+  // เปิดการ์ดดูแชทอยู่ = อ่านข้อความของคำขอนี้แล้ว
+  if (adminSeen && messages.length) {
+    adminSeen.chat[requestId] = Math.max(adminSeen.chat[requestId] || 0, latestMessageMillis(messages));
+    saveSeenState(currentAdminUid, adminSeen);
+  }
+  updateChatBadges();
 
-    if (snapshot.empty) {
-      container.innerHTML = '<div class="chat-empty">ยังไม่มีข้อความ</div>';
-      return;
+  if (!container) return;
+  if (!messages.length) {
+    container.innerHTML = '<div class="chat-empty">ยังไม่มีข้อความ</div>';
+    return;
+  }
+
+  container.innerHTML = "";
+  messages.forEach((msg) => {
+    const isMine = msg.sender_role === "admin";
+    const bubble = document.createElement("div");
+    bubble.className = `chat-bubble ${isMine ? "mine" : "theirs"}`;
+    bubble.innerHTML = `<div class="who">${isMine ? "คุณ (Admin)" : "ลูกค้า"}</div>${escapeHtml(msg.message_text)}`;
+    container.appendChild(bubble);
+  });
+  container.scrollTop = container.scrollHeight;
+}
+
+// badge ต่อการ์ด + แถบสรุปรวมด้านบน (นับทุกคำขอ ไม่ใช่เฉพาะที่ผ่าน filter) + ตัวเลขในชื่อแท็บ
+function updateChatBadges() {
+  if (!adminSeen) return;
+  let total = 0;
+  let requestsWithNew = 0;
+  chatCache.forEach((messages, requestId) => {
+    const unread = countUnreadMessages(adminSeen, requestId, messages, "user");
+    if (unread) {
+      total += unread;
+      requestsWithNew++;
     }
+    const badge = document.getElementById(`chat-unread-${requestId}`);
+    if (badge) {
+      badge.textContent = `💬 ข้อความใหม่ ${unread}`;
+      badge.hidden = unread === 0;
+    }
+  });
 
-    container.innerHTML = "";
-    snapshot.forEach((docSnap) => {
-      const msg = docSnap.data();
-      const isMine = msg.sender_role === "admin";
-      const bubble = document.createElement("div");
-      bubble.className = `chat-bubble ${isMine ? "mine" : "theirs"}`;
-      bubble.innerHTML = `<div class="who">${isMine ? "คุณ (Admin)" : "ลูกค้า"}</div>${escapeHtml(msg.message_text)}`;
-      container.appendChild(bubble);
-    });
-    container.scrollTop = container.scrollHeight;
-  }, (err) => console.error("โหลดแชทไม่สำเร็จ", err));
+  unreadSummary.hidden = total === 0;
+  unreadSummary.innerHTML = `💬 ข้อความใหม่จากลูกค้า <b>${total}</b> ข้อความ ใน ${requestsWithNew} คำขอ${currentFilter ? " — <u>ดูทุกสถานะ</u>" : ""}`;
+  document.title = total ? `(${total}) ${BASE_TITLE}` : BASE_TITLE;
+}
+
+// กดแถบสรุปข้อความใหม่ → สลับไปดูทุกสถานะ เพื่อให้เห็นการ์ดที่มี badge ครบ
+unreadSummary.addEventListener("click", () => {
+  if (!currentFilter) return;
+  filterRow.querySelector('.chip[data-status=""]').click();
+});
+
+// ---------- ตั้งค่า API key ของ AI (เก็บใน browser ของ admin คนนี้เท่านั้น — ดู ai-helpers.js) ----------
+function openAiSettings() {
+  const config = getAiConfig();
+  if (config.source === "file") {
+    window.alert("ตอนนี้ใช้ API key จากไฟล์ ai-config.js ในเครื่องอยู่แล้ว (โหมดพัฒนา) ไม่ต้องตั้งค่าเพิ่ม");
+    return;
+  }
+  const current = config.apiKey ? `ตั้งค่าไว้แล้ว (ลงท้าย ...${config.apiKey.slice(-4)})` : "ยังไม่ได้ตั้งค่า";
+  const input = window.prompt(
+    "วาง OpenRouter API key (ขึ้นต้น sk-or-...) เพื่อใช้ปุ่ม AI บน browser นี้\n" +
+    "key จะถูกเก็บไว้ในเครื่องนี้เท่านั้น ไม่ถูกส่งขึ้น Firestore หรือ GitHub\n" +
+    `สถานะปัจจุบัน: ${current}\n(เว้นว่างแล้วกด OK = ลบ key ออกจากเครื่องนี้)`,
+    "",
+  );
+  if (input === null) return;
+  const key = input.trim();
+  if (!saveAiKey(key)) {
+    showToast("บันทึกไม่สำเร็จ — browser นี้ไม่อนุญาตให้เก็บข้อมูล", true);
+    return;
+  }
+  showToast(key ? "บันทึก API key แล้ว ลองกดปุ่ม AI ได้เลย" : "ลบ API key ออกจากเครื่องนี้แล้ว");
 }

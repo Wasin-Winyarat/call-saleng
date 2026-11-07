@@ -118,6 +118,19 @@ button.photo-thumb { padding: 0; border: none; background: none; cursor: zoom-in
 .datetime-slot-row { display: flex; gap: 16px; font-size: 13px; margin-bottom: 10px; }
 
 /* --- chat thread (admin side) --- */
+.status-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.chat-unread {
+  display: inline-flex; align-items: center; font-size: 11px; font-weight: 700; margin-top: 4px;
+  padding: 3px 8px; border-radius: var(--radius-full); background: var(--color-danger); color: #fff;
+}
+.chat-unread[hidden] { display: none; }
+.unread-summary {
+  display: block; width: 100%; margin-bottom: 12px; padding: 10px 14px; text-align: left;
+  border: none; border-radius: var(--radius-md); background: #FBEBE3; color: #8A3B1F;
+  font: inherit; font-size: 14px; cursor: pointer;
+}
+.unread-summary[hidden] { display: none; }
+
 .chat-section { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--color-neutral-300); }
 .chat-section-title { font-size: 13px; font-weight: 700; margin-bottom: 8px; }
 .chat-messages { max-height: 200px; overflow-y: auto; margin-bottom: 8px; display: flex; flex-direction: column; gap: 6px; }
