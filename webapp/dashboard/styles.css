@@ -61,4 +61,10 @@ body {
 .nav-card-body { flex: 1; min-width: 0; }
 .nav-card-title { font-size: 16px; font-weight: 700; margin-bottom: 2px; }
 .nav-card-desc { font-size: 13px; color: var(--color-text-secondary); }
+.nav-card-badge {
+  min-width: 24px; height: 24px; padding: 0 7px; border-radius: var(--radius-full); flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--color-danger); color: #fff; font-size: 12px; font-weight: 700;
+}
+.nav-card-badge[hidden] { display: none; }
 .nav-card-chevron { color: var(--color-text-secondary); font-size: 18px; flex-shrink: 0; }

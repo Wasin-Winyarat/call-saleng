@@ -39,6 +39,7 @@ webapp/
   index.html            landing page (ปุ่ม login/register + admin corner สำหรับทดสอบ)
   firebase-config.js     Firebase compat SDK init (ใช้ร่วมทุกหน้า)
   auth-helpers.js         normalizePhone / phoneToEmail / adminIdToEmail
+  notify-helpers.js       badge แจ้งเตือนฝั่ง user (ข้อความใหม่จาก Admin / สถานะเปลี่ยน) — เก็บสถานะ "เห็นแล้ว" ใน localStorage
   shared-styles.css       CSS variable/tokens ที่ใช้ร่วมกัน
   login/, register/       user auth flow
   dashboard/              user home หลัง login

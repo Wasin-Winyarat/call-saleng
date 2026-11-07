@@ -249,7 +249,6 @@ function buildDetail(id, data) {
     <div class="detail-row"><b>ที่อยู่:</b> ${escapeHtml(data.address_text)} ${data.landmark ? `(${escapeHtml(data.landmark)})` : ""}</div>
     <div class="detail-row"><b>ปริมาณโดยประมาณ:</b> ${escapeHtml(data.estimated_quantity_description)}</div>
     ${data.notes ? `<div class="detail-row"><b>หมายเหตุ:</b> ${escapeHtml(data.notes)}</div>` : ""}
-    <div class="detail-row"><b>user_id:</b> ${escapeHtml(data.user_id)}</div>
     ${photosHtml}
   `;
   detail.appendChild(buildRequestPhotos(id, data));

@@ -87,6 +87,19 @@ body {
 .status-pill.completed { background: var(--color-primary-100); color: var(--color-primary-700); }
 .status-pill.cancelled { background: #FBEBE3; color: var(--color-danger); }
 
+/* ---------- badge แจ้งเตือน (notify-helpers.js) ---------- */
+.status-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.new-badge {
+  display: inline-flex; align-items: center; font-size: 11px; font-weight: 700; margin-top: 4px;
+  padding: 3px 8px; border-radius: var(--radius-full); background: var(--color-danger); color: #fff;
+}
+.count-badge {
+  display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px;
+  padding: 0 5px; margin-left: 4px; border-radius: var(--radius-full);
+  background: var(--color-danger); color: #fff; font-size: 11px; font-weight: 700; vertical-align: middle;
+}
+.count-badge[hidden] { display: none; }
+
 /* ---------- chat thread ---------- */
 .chat-toggle {
   margin-top: 10px; font-size: 13px; font-weight: 600; color: var(--color-primary-600);

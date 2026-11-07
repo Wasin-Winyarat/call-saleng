@@ -9,8 +9,13 @@ const STATUS_LABEL = {
 
 const requestList = document.getElementById("requestList");
 const toast = document.getElementById("toast");
-const subscribedChats = new Set();
 let currentUserId = null;
+let unsubscribeRequests = null;
+let chatListeners = new Map(); // requestId → unsubscribe ของ listener แชท
+let chatCache = new Map(); // requestId → ข้อความล่าสุด (เก็บไว้ render ซ้ำตอนการ์ดถูกสร้างใหม่)
+let openChats = new Set(); // requestId ที่เปิดกล่องแชทค้างไว้ — คงสถานะไว้ตอน re-render
+let seen = null; // สถานะ "เห็นแล้ว" ปัจจุบัน (notify-helpers.js) — อัปเดตทันทีที่ render
+let seenAtLoad = null; // ภาพตอนเปิดหน้า — ใช้ตัดสินว่าสถานะไหน "ใหม่" ระหว่างที่เปิดหน้านี้อยู่
 
 function escapeHtml(str) {
   const div = document.createElement("div");
@@ -31,26 +36,44 @@ auth.onAuthStateChanged((user) => {
     window.location.href = "../login/index.html";
     return;
   }
+  // ปิด listener ของบัญชีก่อนหน้าทั้งหมด (กรณีสลับบัญชีใน browser เดียวกันโดยไม่ reload หน้า)
+  // ไม่งั้น listener เก่ากับใหม่จะเขียนลง requestList เดียวกันจนเห็นคำขอปนกัน
+  if (unsubscribeRequests) unsubscribeRequests();
+  chatListeners.forEach((unsubscribe) => unsubscribe());
+  chatListeners = new Map();
+  chatCache = new Map();
+  openChats = new Set();
+  requestList.innerHTML = '<div class="empty-note">กำลังโหลด...</div>';
+
   currentUserId = user.uid;
+  seen = loadSeenState(currentUserId);
+  seenAtLoad = JSON.parse(JSON.stringify(seen));
   subscribeMyRequests();
 });
 
 // ---------- รายการคำขอของฉันเท่านั้น (real-time) ----------
 function subscribeMyRequests() {
-  db.collection("pickup_requests")
+  const uid = currentUserId;
+  unsubscribeRequests = db.collection("pickup_requests")
     .where("user_id", "==", currentUserId)
     .orderBy("created_at", "desc")
     .onSnapshot(
       (snapshot) => {
-        if (snapshot.empty) {
+        if (uid !== currentUserId) return;
+        // กันซ้ำฝั่ง client: แสดงเฉพาะ doc ที่ user_id ตรงกับผู้ login จริง
+        const docs = snapshot.docs.filter((docSnap) => docSnap.data().user_id === uid);
+        if (!docs.length) {
           requestList.innerHTML = '<div class="empty-note">ยังไม่มีคำขอ — <a href="../pickup-request/index.html">ส่งคำร้องแรกของคุณได้ที่นี่</a></div>';
           return;
         }
         requestList.innerHTML = "";
-        snapshot.forEach((docSnap) => {
-          requestList.appendChild(renderRequestCard(docSnap.id, docSnap.data()));
+        docs.forEach((docSnap) => {
+          const data = docSnap.data();
+          requestList.appendChild(renderRequestCard(docSnap.id, data));
+          seen.status[docSnap.id] = data.status;
           subscribeChat(docSnap.id);
         });
+        saveSeenState(uid, seen);
       },
       (err) => {
         console.error(err);
@@ -77,7 +100,10 @@ function renderRequestCard(id, data) {
     <div class="request-card-meta">📍 ${escapeHtml(data.sub_district || "-")} — ${escapeHtml(data.address_text || "-")}</div>
     <div class="request-card-meta">🗓️ นัด ${escapeHtml(data.requested_date || "-")} · ${escapeHtml(data.time_slot || "-")}</div>
     ${data.notes ? `<div class="request-card-meta">หมายเหตุ: ${escapeHtml(data.notes)}</div>` : ""}
-    <div class="status-pill ${data.status}">${STATUS_LABEL[data.status] || data.status || "-"}</div>
+    <div class="status-row">
+      <div class="status-pill ${data.status}">${STATUS_LABEL[data.status] || data.status || "-"}</div>
+      ${hasStatusUpdate(seenAtLoad, id, data.status) ? '<span class="new-badge">อัปเดตใหม่</span>' : ""}
+    </div>
   `;
 
   top.appendChild(thumb);
@@ -127,8 +153,8 @@ function buildOwnerActions(id) {
 function buildChatSection(requestId) {
   const wrap = document.createElement("div");
   wrap.innerHTML = `
-    <button type="button" class="chat-toggle" data-request-id="${requestId}">💬 ข้อความกับ Admin</button>
-    <div class="chat-panel" id="chat-panel-${requestId}">
+    <button type="button" class="chat-toggle" data-request-id="${requestId}">💬 ข้อความกับ Admin <span class="count-badge" id="chat-badge-${requestId}" hidden></span></button>
+    <div class="chat-panel${openChats.has(requestId) ? " open" : ""}" id="chat-panel-${requestId}">
       <div class="chat-messages" id="chat-messages-${requestId}">
         <div class="chat-empty">ยังไม่มีข้อความ</div>
       </div>
@@ -141,7 +167,15 @@ function buildChatSection(requestId) {
 
   const toggleBtn = wrap.querySelector(".chat-toggle");
   const panel = wrap.querySelector(`#chat-panel-${requestId}`);
-  toggleBtn.addEventListener("click", () => panel.classList.toggle("open"));
+  toggleBtn.addEventListener("click", () => {
+    panel.classList.toggle("open");
+    if (panel.classList.contains("open")) {
+      openChats.add(requestId);
+      renderChat(requestId);
+    } else {
+      openChats.delete(requestId);
+    }
+  });
 
   const sendMessage = async () => {
     const input = document.getElementById(`chat-input-${requestId}`);
@@ -170,30 +204,48 @@ function buildChatSection(requestId) {
 }
 
 function subscribeChat(requestId) {
-  if (subscribedChats.has(requestId)) return;
-  subscribedChats.add(requestId);
+  if (chatListeners.has(requestId)) {
+    renderChat(requestId); // การ์ดถูกสร้างใหม่ — วาดข้อความจาก cache ทันที ไม่ต้องรอ snapshot ถัดไป
+    return;
+  }
 
-  db.collection("chat_messages")
+  const unsubscribe = db.collection("chat_messages")
     .where("request_id", "==", requestId)
     .orderBy("sent_at", "asc")
     .onSnapshot((snapshot) => {
-      const container = document.getElementById(`chat-messages-${requestId}`);
-      if (!container) return;
-
-      if (snapshot.empty) {
-        container.innerHTML = '<div class="chat-empty">ยังไม่มีข้อความ</div>';
-        return;
-      }
-
-      container.innerHTML = "";
-      snapshot.forEach((docSnap) => {
-        const msg = docSnap.data();
-        const isMine = msg.sender_role === "user";
-        const bubble = document.createElement("div");
-        bubble.className = `chat-bubble ${isMine ? "mine" : "theirs"}`;
-        bubble.innerHTML = `<div class="who">${isMine ? "คุณ" : "Admin"}</div>${escapeHtml(msg.message_text)}`;
-        container.appendChild(bubble);
-      });
-      container.scrollTop = container.scrollHeight;
+      chatCache.set(requestId, snapshot.docs.map((docSnap) => docSnap.data()));
+      renderChat(requestId);
     }, (err) => console.error("โหลดแชทไม่สำเร็จ", err));
+  chatListeners.set(requestId, unsubscribe);
+}
+
+function renderChat(requestId) {
+  const container = document.getElementById(`chat-messages-${requestId}`);
+  const messages = chatCache.get(requestId);
+  if (!container || !messages) return;
+
+  // เปิดกล่องแชทอยู่ = อ่านแล้ว
+  if (openChats.has(requestId)) {
+    seen.chat[requestId] = Math.max(seen.chat[requestId] || 0, latestMessageMillis(messages));
+    saveSeenState(currentUserId, seen);
+  }
+  const badge = document.getElementById(`chat-badge-${requestId}`);
+  const unread = countUnreadAdminMessages(seen, requestId, messages);
+  badge.textContent = unread;
+  badge.hidden = unread === 0;
+
+  if (!messages.length) {
+    container.innerHTML = '<div class="chat-empty">ยังไม่มีข้อความ</div>';
+    return;
+  }
+
+  container.innerHTML = "";
+  messages.forEach((msg) => {
+    const isMine = msg.sender_role === "user";
+    const bubble = document.createElement("div");
+    bubble.className = `chat-bubble ${isMine ? "mine" : "theirs"}`;
+    bubble.innerHTML = `<div class="who">${isMine ? "คุณ" : "Admin"}</div>${escapeHtml(msg.message_text)}`;
+    container.appendChild(bubble);
+  });
+  container.scrollTop = container.scrollHeight;
 }
