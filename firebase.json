@@ -5,6 +5,12 @@
   },
   "hosting": {
     "public": "webapp",
-    "ignore": ["firebase.json", "**/.*", "**/node_modules/**", "ai-config.js"]
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**", "ai-config.js"],
+    "headers": [
+      {
+        "source": "**/*.@(html|js|css)",
+        "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+      }
+    ]
   }
 }
