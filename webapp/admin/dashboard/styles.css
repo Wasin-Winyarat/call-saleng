@@ -171,6 +171,15 @@ button.photo-thumb { padding: 0; border: none; background: none; cursor: zoom-in
 }
 .modal-reason:focus { outline: none; border-color: var(--color-primary-600); }
 .modal-actions { display: flex; flex-direction: column; gap: 8px; }
+.modal-actions .btn[hidden] { display: none; }
+.ai-key-label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+.ai-key-input {
+  width: 100%; box-sizing: border-box; padding: 10px 12px; margin-bottom: 8px; font: inherit; font-size: 14px;
+  border: 1.5px solid var(--color-neutral-300); border-radius: 10px;
+}
+.ai-key-input:focus { outline: none; border-color: var(--color-primary-600); }
+.ai-key-help { font-size: 12px; color: var(--color-text-secondary); margin-bottom: 16px; line-height: 1.6; }
+.ai-key-help a { color: var(--color-primary-600); font-weight: 600; }
 
 /* --- AI helpers --- */
 .ai-summarize-all { margin-bottom: 18px; }

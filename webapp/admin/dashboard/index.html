@@ -59,6 +59,24 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="aiSettingsModal">
+  <form class="modal-box" id="aiSettingsForm" autocomplete="off">
+    <div class="modal-title">⚙️ ตั้งค่า AI</div>
+    <div class="modal-desc" id="aiSettingsStatus"></div>
+    <label class="ai-key-label" for="aiKeyInput">OpenRouter API key</label>
+    <input type="password" class="ai-key-input" id="aiKeyInput" placeholder="sk-or-v1-..." spellcheck="false">
+    <div class="ai-key-help">
+      ขอ key ได้ที่ <a href="https://openrouter.ai/keys" target="_blank" rel="noopener">openrouter.ai/keys</a> (login → Create Key → คัดลอกมาวาง)<br>
+      key เก็บไว้ใน browser นี้เท่านั้น ไม่ถูกส่งขึ้น Firestore หรือ GitHub
+    </div>
+    <div class="modal-actions">
+      <button type="submit" class="btn btn-primary" id="aiKeySaveBtn">บันทึก</button>
+      <button type="button" class="btn btn-danger" id="aiKeyClearBtn">ลบ key ออกจากเครื่องนี้</button>
+      <button type="button" class="btn btn-secondary" id="aiKeyCancelBtn">ปิด</button>
+    </div>
+  </form>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>

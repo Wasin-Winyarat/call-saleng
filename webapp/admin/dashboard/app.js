@@ -699,24 +699,60 @@ unreadSummary.addEventListener("click", () => {
 });
 
 // ---------- ตั้งค่า API key ของ AI (เก็บใน browser ของ admin คนนี้เท่านั้น — ดู ai-helpers.js) ----------
+// ใช้ modal ในหน้าแทน window.prompt — บาง browser (เช่น in-app browser หรือเคยติ๊ก "ไม่ต้องแสดง dialog อีก")
+// ปิด prompt ทิ้งทันทีโดยไม่แสดงอะไร ทำให้ดูเหมือนกดแล้วไม่เกิดอะไรขึ้น
+const aiSettingsModal = document.getElementById("aiSettingsModal");
+const aiSettingsForm = document.getElementById("aiSettingsForm");
+const aiSettingsStatus = document.getElementById("aiSettingsStatus");
+const aiKeyInput = document.getElementById("aiKeyInput");
+const aiKeyClearBtn = document.getElementById("aiKeyClearBtn");
+
 function openAiSettings() {
   const config = getAiConfig();
+  aiKeyInput.value = "";
   if (config.source === "file") {
-    window.alert("ตอนนี้ใช้ API key จากไฟล์ ai-config.js ในเครื่องอยู่แล้ว (โหมดพัฒนา) ไม่ต้องตั้งค่าเพิ่ม");
+    aiSettingsStatus.textContent = "ตอนนี้ใช้ key จากไฟล์ ai-config.js ในเครื่องอยู่แล้ว (โหมดพัฒนา) — ไม่ต้องตั้งค่าเพิ่ม";
+  } else if (config.apiKey) {
+    aiSettingsStatus.textContent = `ตั้งค่าไว้แล้วใน browser นี้ (key ลงท้าย ...${config.apiKey.slice(-4)}) — วาง key ใหม่เพื่อเปลี่ยน`;
+  } else {
+    aiSettingsStatus.textContent = "ยังไม่ได้ตั้งค่า — วาง key เพื่อใช้ปุ่ม AI บน browser นี้";
+  }
+  aiKeyClearBtn.hidden = config.source !== "browser";
+  aiSettingsModal.classList.add("open");
+  aiKeyInput.focus();
+}
+
+function closeAiSettings() {
+  aiKeyInput.value = "";
+  aiSettingsModal.classList.remove("open");
+}
+
+aiSettingsForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const key = aiKeyInput.value.trim();
+  if (!key) {
+    showToast("วาง API key ก่อนกดบันทึก", true);
     return;
   }
-  const current = config.apiKey ? `ตั้งค่าไว้แล้ว (ลงท้าย ...${config.apiKey.slice(-4)})` : "ยังไม่ได้ตั้งค่า";
-  const input = window.prompt(
-    "วาง OpenRouter API key (ขึ้นต้น sk-or-...) เพื่อใช้ปุ่ม AI บน browser นี้\n" +
-    "key จะถูกเก็บไว้ในเครื่องนี้เท่านั้น ไม่ถูกส่งขึ้น Firestore หรือ GitHub\n" +
-    `สถานะปัจจุบัน: ${current}\n(เว้นว่างแล้วกด OK = ลบ key ออกจากเครื่องนี้)`,
-    "",
-  );
-  if (input === null) return;
-  const key = input.trim();
+  if (!key.startsWith("sk-or-")) {
+    showToast("key ของ OpenRouter ต้องขึ้นต้นด้วย sk-or- — ตรวจว่าคัดลอกมาครบ", true);
+    return;
+  }
   if (!saveAiKey(key)) {
     showToast("บันทึกไม่สำเร็จ — browser นี้ไม่อนุญาตให้เก็บข้อมูล", true);
     return;
   }
-  showToast(key ? "บันทึก API key แล้ว ลองกดปุ่ม AI ได้เลย" : "ลบ API key ออกจากเครื่องนี้แล้ว");
-}
+  closeAiSettings();
+  showToast("บันทึก API key แล้ว ลองกดปุ่ม AI ได้เลย");
+});
+
+aiKeyClearBtn.addEventListener("click", () => {
+  saveAiKey("");
+  closeAiSettings();
+  showToast("ลบ API key ออกจากเครื่องนี้แล้ว");
+});
+
+document.getElementById("aiKeyCancelBtn").addEventListener("click", closeAiSettings);
+aiSettingsModal.addEventListener("click", (e) => {
+  if (e.target === aiSettingsModal) closeAiSettings();
+});
