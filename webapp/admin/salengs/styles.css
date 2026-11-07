@@ -1,0 +1,37 @@
+/* หน้าจัดการซาเล้ง — ต่อยอดจาก ../dashboard/styles.css */
+
+.s-card {
+  background: var(--color-neutral-card); border: 1px solid var(--color-neutral-300);
+  border-radius: var(--radius-md); padding: 16px; margin-bottom: 10px;
+}
+.s-card-top { display: flex; align-items: flex-start; gap: 12px; }
+.s-card-avatar {
+  width: 44px; height: 44px; border-radius: var(--radius-full); flex-shrink: 0;
+  background: #E3F0FB; display: flex; align-items: center; justify-content: center; font-size: 22px;
+}
+.s-card-body { flex: 1; min-width: 0; }
+.s-card-name { font-size: 15px; font-weight: 700; }
+.s-card-meta { font-size: 13px; color: var(--color-text-secondary); }
+.s-card-meta a { color: var(--color-primary-600); font-weight: 600; }
+.area-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.area-chip { font-size: 12px; padding: 2px 10px; border-radius: var(--radius-full); background: var(--color-primary-100); color: var(--color-primary-700); font-weight: 600; }
+
+.s-stats { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.s-stat { font-size: 12px; padding: 6px 10px; border-radius: 10px; background: var(--color-neutral-bg); border: 1px solid var(--color-neutral-300); }
+.s-stat b { font-size: 14px; margin-right: 4px; }
+.s-stat.bad { background: #FBEBE3; border-color: #F3C9B6; color: var(--color-danger); }
+
+.s-docs { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+.s-doc { width: 150px; }
+.s-doc-label { font-size: 12px; color: var(--color-text-secondary); margin-bottom: 4px; }
+.s-doc button {
+  display: block; width: 150px; height: 100px; padding: 0; border: 1px solid var(--color-neutral-300);
+  border-radius: 10px; overflow: hidden; background: var(--color-neutral-bg); cursor: zoom-in;
+}
+.s-doc img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.s-docs-load { font: inherit; font-size: 13px; font-weight: 600; color: var(--color-primary-600); background: none; border: none; padding: 0; margin-top: 10px; cursor: pointer; }
+
+.s-reason { margin-top: 10px; padding: 8px 10px; border-radius: 10px; font-size: 13px; background: #FBEBE3; color: var(--color-danger); }
+.s-reason-form { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+.s-reason-form[hidden] { display: none; }
+.s-reason-form input { padding: 10px 12px; font: inherit; font-size: 14px; border: 1.5px solid var(--color-neutral-300); border-radius: 10px; }

@@ -107,6 +107,8 @@ auth.onAuthStateChanged(async (user) => {
     adminSeen = loadSeenState(currentAdminUid);
     subscribeRequests();
     subscribeAllChats();
+    subscribeSalengs(); // matching.js
+    subscribeSalengChats();
   } catch (err) {
     console.error(err);
     showToast("โหลดข้อมูล admin ไม่สำเร็จ", true);
@@ -233,6 +235,8 @@ function renderRequestCard(id, data) {
     <div class="status-row">
       <div class="status-pill ${data.status}">${STATUS_LABEL[data.status] || data.status}</div>
       <span class="chat-unread" id="chat-unread-${id}" hidden></span>
+      <span class="chat-unread saleng" id="saleng-unread-${id}" hidden></span>
+      ${matchWarningsHtml(data)}
     </div>
   `;
 
@@ -248,6 +252,7 @@ function renderRequestCard(id, data) {
     if (card.classList.contains("open")) {
       openCards.add(id);
       renderChat(id);
+      renderSalengChat(id);
     } else {
       openCards.delete(id);
     }
@@ -258,7 +263,10 @@ function renderRequestCard(id, data) {
 
   // วาดแชท/badge จาก cache ทันทีหลังการ์ดเข้า DOM (การ์ดถูกสร้างใหม่ทุกครั้งที่รายการคำขอเปลี่ยน)
   setTimeout(() => {
-    if (openCards.has(id)) renderChat(id);
+    if (openCards.has(id)) {
+      renderChat(id);
+      renderSalengChat(id);
+    }
     updateChatBadges();
   }, 0);
 
@@ -300,6 +308,7 @@ function buildDetail(id, data) {
     detail.appendChild(buildDateTimeEditor(id, data));
   }
 
+  detail.appendChild(buildMatchSection(id, data)); // matching.js
   detail.appendChild(buildChatSection(id));
   return detail;
 }
@@ -577,13 +586,14 @@ modalConfirmBtn.addEventListener("click", async () => {
       admin_reviewed_at: firebase.firestore.FieldValue.serverTimestamp(),
       admin_reviewed_by: currentAdminUid,
     };
+    if (action === "confirm") updateData.opened_at = firebase.firestore.FieldValue.serverTimestamp();
     if (action === "reject") {
       updateData.cancelled_at = firebase.firestore.FieldValue.serverTimestamp();
       updateData.cancelled_by = "admin";
       updateData.cancel_reason = reason;
     }
 
-    // status เปลี่ยนที่นี่เท่านั้น — จุดเดียวในทั้งไฟล์ที่เขียน field `status`, เกิดขึ้นเมื่อคนกด "ยืนยัน" เท่านั้น ไม่มี AI call ใดแตะ field นี้
+    // status เปลี่ยนที่นี่ (อนุมัติ/ปฏิเสธคำขอ) และใน matching.js (มอบหมาย/ยืนยัน/ยกเลิกการจับคู่) — ทุกจุดเกิดจากคนกดปุ่มเท่านั้น ไม่มี AI call ใดแตะ field นี้
     await db.collection("pickup_requests").doc(requestId).update(updateData);
     showToast(action === "confirm" ? "Confirm สำเร็จ" : "ลบ/Reject สำเร็จ");
   } catch (err) {
@@ -699,9 +709,24 @@ function updateChatBadges() {
     }
   });
 
-  unreadSummary.hidden = total === 0;
-  unreadSummary.innerHTML = `💬 ข้อความใหม่จากลูกค้า <b>${total}</b> ข้อความ ใน ${requestsWithNew} คำขอ${currentFilter ? " — <u>ดูทุกสถานะ</u>" : ""}`;
-  document.title = total ? `(${total}) ${BASE_TITLE}` : BASE_TITLE;
+  // ข้อความใหม่จากซาเล้ง (matching.js) — badge แยกสีบนการ์ดเดียวกัน
+  let salengTotal = 0;
+  allRequests.forEach(({ id }) => {
+    const unread = salengUnread(id);
+    salengTotal += unread;
+    const badge = document.getElementById(`saleng-unread-${id}`);
+    if (badge) {
+      badge.textContent = `🛺 ซาเล้งทักมา ${unread}`;
+      badge.hidden = unread === 0;
+    }
+  });
+
+  const parts = [];
+  if (total) parts.push(`💬 ข้อความใหม่จากลูกค้า <b>${total}</b> ข้อความ ใน ${requestsWithNew} คำขอ`);
+  if (salengTotal) parts.push(`🛺 ข้อความใหม่จากซาเล้ง <b>${salengTotal}</b> ข้อความ`);
+  unreadSummary.hidden = parts.length === 0;
+  unreadSummary.innerHTML = `${parts.join(" · ")}${currentFilter ? " — <u>ดูทุกสถานะ</u>" : ""}`;
+  document.title = total + salengTotal ? `(${total + salengTotal}) ${BASE_TITLE}` : BASE_TITLE;
 }
 
 // กดแถบสรุปข้อความใหม่ → สลับไปดูทุกสถานะ เพื่อให้เห็นการ์ดที่มี badge ครบ

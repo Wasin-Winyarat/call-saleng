@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>จัดการซาเล้ง — กรีนซาเล้ง</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../dashboard/styles.css">
+<link rel="stylesheet" href="../admin-shell.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+<!-- เปิดไฟล์นี้ตรงๆ (double-click) ได้เลย ไม่ต้องรัน server -->
+<body>
+<header class="admin-header" id="adminHeader"></header>
+
+<div class="page">
+  <div class="page-head">
+    <div>
+      <h1 class="page-head-title">ซาเล้ง</h1>
+      <div class="page-head-sub">ตรวจใบสมัคร อนุมัติ/ไม่อนุมัติ และระงับบัญชี — ดูสถิติการยกเลิกงานประกอบการตัดสินใจ</div>
+    </div>
+  </div>
+
+  <div class="chip-row" id="filterRow" role="tablist" aria-label="กรองตามสถานะบัญชี">
+    <button type="button" class="chip active" role="tab" data-filter="pending">รออนุมัติ<span class="chip-count" data-count="pending"></span></button>
+    <button type="button" class="chip" role="tab" data-filter="active">ใช้งานอยู่<span class="chip-count" data-count="active"></span></button>
+    <button type="button" class="chip" role="tab" data-filter="suspended">ระงับ<span class="chip-count" data-count="suspended"></span></button>
+    <button type="button" class="chip" role="tab" data-filter="rejected">ไม่อนุมัติ<span class="chip-count" data-count="rejected"></span></button>
+  </div>
+
+  <div id="salengList"><div class="empty-note">กำลังโหลด...</div></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script src="../../firebase-config.js"></script>
+<script src="../../image-helpers.js"></script>
+<script src="../../saleng-helpers.js"></script>
+<script src="../admin-shell.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

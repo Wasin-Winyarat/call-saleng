@@ -217,3 +217,33 @@ button.photo-thumb { padding: 0; border: none; background: none; cursor: zoom-in
 }
 .toast.show { opacity: .95; }
 .toast.error { background: var(--color-danger); }
+
+/* ---------- การจับคู่ซาเล้ง (matching.js) ---------- */
+.chat-unread.saleng { background: #1F5C7A; }
+.warn-chip, .action-chip, .info-chip {
+  display: inline-flex; align-items: center; font-size: 11px; font-weight: 700; margin-top: 4px;
+  padding: 3px 8px; border-radius: var(--radius-full);
+}
+.warn-chip { background: #FFF1D6; color: #8A5A15; }
+.action-chip { background: var(--color-primary-600); color: #fff; }
+.info-chip { background: #E3F0FB; color: #1F5C7A; }
+
+.match-section:not(:empty) {
+  margin-top: 14px; padding: 14px; border-radius: var(--radius-md);
+  background: #F3F8F4; border: 1px solid var(--color-primary-100);
+}
+.match-title { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+.match-note { font-size: 12px; color: var(--color-text-secondary); margin-bottom: 8px; }
+.match-select {
+  width: 100%; padding: 10px 12px; margin-bottom: 8px; font: inherit; font-size: 14px;
+  border: 1.5px solid var(--color-neutral-300); border-radius: 10px; background: #fff;
+}
+.match-warn { font-size: 12px; font-weight: 600; color: #8A5A15; background: #FFF1D6; padding: 8px 10px; border-radius: 10px; margin-bottom: 8px; }
+.match-warn[hidden] { display: none; }
+.match-saleng { font-size: 14px; margin-bottom: 4px; }
+.match-saleng a { color: var(--color-primary-600); font-weight: 600; }
+.match-release { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+.match-release[hidden] { display: none; }
+.match-reason { padding: 10px 12px; font: inherit; font-size: 14px; border: 1.5px solid var(--color-neutral-300); border-radius: 10px; }
+.saleng-chat .chat-section-title { color: #1F5C7A; }
+.match-assign-btn { width: 100%; }

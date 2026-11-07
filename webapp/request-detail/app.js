@@ -112,6 +112,16 @@ function render() {
       <div style="${isCancelled ? "margin-top:12px;" : ""}">${hint}</div>
     </div>
 
+    ${["confirmed", "completed"].includes(data.status) && data.assigned_saleng_name ? `
+      <div class="detail-card saleng-card">
+        <div class="detail-card-title">🛺 ซาเล้งที่${data.status === "completed" ? "รับงานนี้" : "จะเข้าไปรับ"}</div>
+        <dl class="info-list">
+          ${infoRow("ชื่อ", data.assigned_saleng_name)}
+          <div class="info-row"><dt>เบอร์โทร</dt><dd><a href="tel:${escapeHtml(data.assigned_saleng_phone || "")}">${escapeHtml(data.assigned_saleng_phone || "-")}</a></dd></div>
+          ${infoRow("ทะเบียนรถ", data.assigned_saleng_plate)}
+        </dl>
+      </div>` : ""}
+
     <a class="chat-cta" id="chatCta" href="${chatUrl(requestId)}">
       <span class="chat-cta-icon" aria-hidden="true">💬<span class="unread-dot" id="chatBadge" hidden></span></span>
       <div class="chat-cta-body">

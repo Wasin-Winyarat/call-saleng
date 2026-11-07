@@ -1,5 +1,5 @@
 // แถบหัวของหน้า admin (ใช้ร่วมกันระหว่าง admin/dashboard และ admin/banners) — คู่กับ admin-shell.css
-// renderAdminHeader({ active: "requests" | "banners", name, onAiSettings, onLogout })
+// renderAdminHeader({ active: "requests" | "salengs" | "banners", name, onAiSettings, onLogout })
 // onAiSettings ไม่ส่งมา = ไม่แสดงปุ่มตั้งค่า AI (หน้าที่ไม่มีปุ่ม AI)
 
 function renderAdminHeader({ active, name, onAiSettings, onLogout }) {
@@ -17,6 +17,7 @@ function renderAdminHeader({ active, name, onAiSettings, onLogout }) {
       </a>
       <nav class="admin-nav" aria-label="เมนู admin">
         ${navItem("requests", "../dashboard/index.html", "📋", "คำขอ")}
+        ${navItem("salengs", "../salengs/index.html", "🛺", "ซาเล้ง")}
         ${navItem("banners", "../banners/index.html", "🖼️", "Banner")}
       </nav>
       <div class="admin-account">

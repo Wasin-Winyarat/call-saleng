@@ -24,6 +24,20 @@ service cloud.firestore {
       return request.auth != null && request.auth.uid == uid;
     }
 
+    // ซาเล้งที่ Admin อนุมัติแล้วและไม่ถูกระงับ — admin เขียน marker active_salengs/{uid} ตอนอนุมัติ/เปิดใช้งาน
+    // และลบทิ้งตอนปฏิเสธ/ระงับ (ใช้ exists() แบบเดียวกับ isAdmin() — หลีกเลี่ยง get() ที่เคยมีปัญหาใน allow create)
+    function isActiveSaleng() {
+      return request.auth != null &&
+        exists(/databases/$(database)/documents/active_salengs/$(request.auth.uid));
+    }
+
+    // field การจับคู่บน pickup_requests ที่ซาเล้งแก้ได้ (รับงาน/ตอบรับ/ปฏิเสธ/ยกเลิก/ปิดงาน)
+    function salengMatchKeys() {
+      return ['status', 'assigned_saleng_id', 'assigned_saleng_name', 'assigned_saleng_phone',
+        'assigned_saleng_plate', 'match_channel', 'saleng_accepted', 'assigned_at', 'accepted_at',
+        'active_match_id', 'opened_at', 'completed_at'];
+    }
+
     // เจ้าของบัญชีเท่านั้นที่อ่าน/แก้ไขโปรไฟล์ตัวเองได้ (ไม่มี flow ให้ admin อ่าน/แก้บัญชี user ในโค้ดปัจจุบัน)
     match /user_accounts/{uid} {
       allow read, write: if isOwner(uid);
@@ -42,7 +56,11 @@ service cloud.firestore {
     }
 
     match /pickup_requests/{requestId} {
-      allow read: if isAdmin() || isOwner(resource.data.user_id);
+      // ซาเล้งเห็นงานที่เปิดรับ (query ฝั่ง client กรองตามตำบลที่ลงทะเบียน) และงานที่ผูกกับตัวเอง
+      // ข้อจำกัด: rules ไม่ได้บังคับเรื่องตำบล (ต้อง get() saleng_accounts มาเทียบ) — ซาเล้งที่อนุมัติแล้วอ่านงานเปิดของตำบลอื่นได้ถ้ายิง query เอง
+      allow read: if isAdmin() || isOwner(resource.data.user_id) ||
+        (isActiveSaleng() &&
+         (resource.data.status == 'open_for_saleng' || resource.data.assigned_saleng_id == request.auth.uid));
 
       // สร้างได้เฉพาะคำขอของตัวเอง และต้องเริ่มที่ pending_admin_review เท่านั้น
       allow create: if isOwner(request.resource.data.user_id) &&
@@ -50,11 +68,36 @@ service cloud.firestore {
 
       // admin แก้ได้ทุกกรณี (confirm/reject/แก้ไขวัน-เวลา ตาม ACL.md)
       // user เจ้าของแก้ได้เฉพาะตอนยัง pending_admin_review และห้ามเปลี่ยน status/ย้ายเจ้าของคำขอเอง
+      // ซาเล้ง: แก้ได้เฉพาะ field การจับคู่ และเฉพาะการเปลี่ยนสถานะที่กำหนด
+      //   รับงานเอง (self-pick): open_for_saleng → pending_match_confirm โดยผูกกับตัวเอง
+      //   งานของตัวเอง: ตอบรับงานที่ admin มอบหมาย (คง pending_match_confirm), ปฏิเสธ/ยกเลิก (→ open_for_saleng
+      //   และล้าง assigned_saleng_id เป็น null), ปิดงาน (confirmed → completed)
+      // ข้อจำกัด: กำหนดเวลายกเลิกหลัง Admin ยืนยัน และโควตาคิว ตรวจฝั่ง client เท่านั้น (rules คำนวณจากวัน/รอบนัดไม่ได้สะดวก)
       allow update: if isAdmin() ||
         (isOwner(resource.data.user_id) &&
          resource.data.status == 'pending_admin_review' &&
          request.resource.data.status == 'pending_admin_review' &&
-         request.resource.data.user_id == resource.data.user_id);
+         request.resource.data.user_id == resource.data.user_id) ||
+        (isActiveSaleng() &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(salengMatchKeys()) &&
+         (
+           (resource.data.status == 'open_for_saleng' &&
+            request.resource.data.status == 'pending_match_confirm' &&
+            request.resource.data.assigned_saleng_id == request.auth.uid &&
+            request.resource.data.match_channel == 'self_pick') ||
+           (resource.data.assigned_saleng_id == request.auth.uid &&
+            (
+              (resource.data.status == 'pending_match_confirm' &&
+               request.resource.data.status == 'pending_match_confirm' &&
+               request.resource.data.assigned_saleng_id == request.auth.uid) ||
+              (resource.data.status in ['pending_match_confirm', 'confirmed'] &&
+               request.resource.data.status == 'open_for_saleng' &&
+               request.resource.data.assigned_saleng_id == null) ||
+              (resource.data.status == 'confirmed' &&
+               request.resource.data.status == 'completed' &&
+               request.resource.data.assigned_saleng_id == request.auth.uid)
+            ))
+         ));
 
       // ลบได้เฉพาะเจ้าของคำขอ และเฉพาะตอนยัง pending_admin_review (ไม่มี flow ให้ admin ลบในโค้ดปัจจุบัน)
       allow delete: if isOwner(resource.data.user_id) &&
@@ -101,6 +144,64 @@ service cloud.firestore {
         request.resource.data.image_data.size() < 1000000;
 
       allow delete: if isAdmin();
+    }
+
+    // ---------- ฝั่งซาเล้ง ----------
+
+    // บัญชีซาเล้ง (doc id = uid) — สมัครเองได้ แต่ต้องเริ่มที่ pending/active เสมอ
+    // อนุมัติ/ปฏิเสธ/ระงับ ทำได้เฉพาะ admin (ซาเล้งแก้ข้อมูลตัวเองหลังสมัครไม่ได้ในเวอร์ชันนี้)
+    match /saleng_accounts/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow create: if isOwner(uid) &&
+        request.resource.data.approval_status == 'pending' &&
+        request.resource.data.account_status == 'active';
+      allow update: if isAdmin();
+      allow delete: if false;
+    }
+
+    // รูปเอกสารตอนสมัคร (รูปรถ / รูปบัตรประชาชน) — ข้อมูลอ่อนไหว: อ่านได้เฉพาะเจ้าของกับ admin
+    // แยก 1 รูป = 1 doc (base64) เพราะ doc จำกัด 1 MiB
+    match /saleng_documents/{docId} {
+      allow read: if isAdmin() || isOwner(resource.data.saleng_id);
+      allow create: if isOwner(request.resource.data.saleng_id) &&
+        request.resource.data.doc_type in ['vehicle_photo', 'id_card_photo'] &&
+        request.resource.data.image_data is string &&
+        request.resource.data.image_data.matches('^data:image/jpeg;base64,.*') &&
+        request.resource.data.image_data.size() < 1000000;
+      allow update: if false;
+      allow delete: if isAdmin() || isOwner(resource.data.saleng_id);
+    }
+
+    // marker ซาเล้งที่อนุมัติแล้วและไม่ถูกระงับ (ดู isActiveSaleng) — admin เขียนเท่านั้น
+    match /active_salengs/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // ประวัติการจับคู่แต่ละรอบ (request_match ใน database-schema) — ใช้ดูประวัติและนับสถิติการยกเลิกของซาเล้ง
+    match /request_matches/{matchId} {
+      allow read: if isAdmin() || isOwner(resource.data.saleng_id);
+      allow create: if isAdmin() ||
+        (isActiveSaleng() && request.resource.data.saleng_id == request.auth.uid &&
+         request.resource.data.match_channel == 'self_pick');
+      allow update: if isAdmin() ||
+        (isActiveSaleng() && resource.data.saleng_id == request.auth.uid &&
+         request.resource.data.saleng_id == request.auth.uid);
+      allow delete: if false;
+    }
+
+    // แชทระหว่าง Admin กับซาเล้งต่อคำขอ (แยกจาก chat_messages ที่เป็นแชทกับลูกค้า)
+    match /saleng_chat_messages/{messageId} {
+      allow read: if isAdmin() || isOwner(resource.data.saleng_id);
+      allow create: if request.auth != null &&
+        request.resource.data.sender_id == request.auth.uid &&
+        (
+          (request.resource.data.sender_role == 'admin' && isAdmin()) ||
+          (request.resource.data.sender_role == 'saleng' &&
+           request.resource.data.saleng_id == request.auth.uid &&
+           exists(/databases/$(database)/documents/saleng_accounts/$(request.auth.uid)))
+        );
+      allow update, delete: if false;
     }
 
     match /chat_messages/{messageId} {

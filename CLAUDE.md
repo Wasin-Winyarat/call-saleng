@@ -51,7 +51,9 @@ webapp/
   tracking/, prices/, profile/   หน้า user เพิ่มเติม
   request-detail/         รายละเอียดคำขอ 1 รายการ (?id=) + แก้ไข/ลบ
   chat/                   แชทกับ Admin แยกต่อคำขอ (?id=) เต็มจอ
-  admin/                  admin login + admin/dashboard/ (accept/cancel/change-time, chat) + admin/banners/ (จัดการ banner หน้าหลัก user) — แถบหัวร่วม admin/admin-shell.js/.css
+  saleng/                 ฝั่งซาเล้ง (mobile-first): register/, login/, jobs/ (งานใหม่ + งานของฉัน), chat/ (แชทกับ Admin ต่องาน)
+  saleng-helpers.js       กติกาซาเล้ง: โควตา 3 งาน/รอบ + 6 งานค้าง, สูตรกำหนดเวลายกเลิก, salengPhoneToEmail (synthetic email แยก domain จากลูกค้า)
+  admin/                  admin login + admin/dashboard/ (accept/cancel/change-time, chat) + admin/salengs/ (อนุมัติ/ระงับซาเล้ง) + admin/dashboard/matching.js (มอบหมาย/ยืนยัน/ยกเลิกการจับคู่) + admin/banners/ (จัดการ banner หน้าหลัก user) — แถบหัวร่วม admin/admin-shell.js/.css
   seed/                   สคริปต์ seed ข้อมูลตัวอย่างลง Firestore สำหรับ dev/demo
 ```
 
@@ -72,20 +74,28 @@ webapp/
 | `admin_accounts` | `admin_account` |
 | `pickup_requests` | `pickup_request` |
 | `chat_messages` | `chat_message` |
+| `saleng_accounts` | `saleng_account` (doc id = uid; `approval_status` pending/approved/rejected, `account_status` active/suspended, `service_sub_districts` เป็น array ตำบลที่รับงาน, `vehicle_plate`) |
+| `saleng_documents` | (ไม่มีใน schema — รูปรถ/รูปบัตรประชาชนตอนสมัคร base64 1 รูป = 1 doc, อ่านได้เฉพาะเจ้าของ+admin) |
+| `active_salengs` | (ไม่มีใน schema — marker ที่ admin เขียนตอนอนุมัติ/ลบตอนระงับ ให้ rules เช็กสิทธิ์ซาเล้งด้วย `exists()`) |
+| `request_matches` | `request_match` (ประวัติการจับคู่แต่ละรอบ; `match_status` เพิ่ม `pending_saleng_accept` สำหรับงานที่ admin มอบหมาย; ใช้นับสถิติยกเลิกหลังยืนยัน `cancelled_after_confirm`) |
+| `saleng_chat_messages` | (ไม่มีใน schema — แชท Admin↔ซาเล้งต่อคำขอ แยกจาก `chat_messages` ของลูกค้า) |
 | `ad_banners` | `ad_banner` (เก็บรูปเป็น base64 ใน `image_data` แทน `image_reference`; `status` ใช้แค่ `active`/`draft` — `expired` คำนวณจาก `end_date` ตอนแสดงผล; `start_date`/`end_date` เป็น string `YYYY-MM-DD`; มี `link_url`, `display_order` เพิ่ม) |
 | `request_photos` | `request_photo` (เก็บรูปเป็น base64 JPEG data URL ใน field `image_data` แทน `file_reference` — ไม่ใช้ Firebase Storage, 1 รูป = 1 doc, บีบอัดฝั่ง client ให้ data URL ≤ 700,000 ตัวอักษรเพราะ doc จำกัด 1 MiB; มี `user_id` ซ้ำไว้เพื่อเช็กสิทธิ์ใน rules) |
 
-Collection อื่นที่มีอยู่ใน `database-schema.md` แต่**ยังไม่ implement**เป็นโค้ดจริง (นอกขอบเขต module ปัจจุบันตาม `SCOPE.md` — ฝั่งสาเล้ง/matching/ใบเสร็จ/ราคากลาง): `saleng_account`, `waste_type`, `waste_reference_price`, `pickup_request_waste_item`, `request_match`, `receipt`, `receipt_item`, `saleng_fee_ledger_entry`, `saleng_wallet_balance`, `membership_tier` — อย่าสมมติว่ามี collection เหล่านี้อยู่ใน Firestore จริงแล้ว ต้องสร้างตอน implement เท่านั้น
+Collection อื่นที่มีอยู่ใน `database-schema.md` แต่**ยังไม่ implement**เป็นโค้ดจริง (นอกขอบเขต module ปัจจุบันตาม `SCOPE.md` — ฝั่งสาเล้ง/matching/ใบเสร็จ/ราคากลาง): `waste_type`, `waste_reference_price`, `pickup_request_waste_item`, `receipt`, `receipt_item`, `saleng_fee_ledger_entry`, `saleng_wallet_balance`, `membership_tier` — อย่าสมมติว่ามี collection เหล่านี้อยู่ใน Firestore จริงแล้ว ต้องสร้างตอน implement เท่านั้น
 
 ### สถานะ (status) ของ `pickup_requests`
 
-ฟิลด์ `status` ใน `database-schema.md` นิยามไว้ 6 ค่า แต่ในโค้ดปัจจุบัน (module รอบนี้ตัด flow ฝั่งสาเล้งออก) มีแค่ transition นี้ที่ implement จริงใน [webapp/admin/dashboard/app.js](webapp/admin/dashboard/app.js):
+ใช้ครบทั้ง 6 ค่าตาม `database-schema.md` แล้ว (กติกาเต็มอยู่ใน [docs/01-requirements/01-spec/20260912-002-saleng-auto-matching.md](docs/01-requirements/01-spec/20260912-002-saleng-auto-matching.md)):
 
 - `pending_admin_review` — สถานะเริ่มต้นตอน user ส่งคำขอ ([webapp/pickup-request/app.js](webapp/pickup-request/app.js))
-- `open_for_saleng` — admin กด "Confirm"
-- `cancelled` — admin กด "Reject" (**หมายเหตุ**: business rule ใหม่บังคับต้องมี `cancel_reason` ตาม `SCOPE.md` แต่โค้ดจุดนี้ยังไม่ได้ใส่ field นี้ตอน update — รอทำต่อ อย่าลืมถ้าถูกขอให้ทำ cancel reason)
+- `open_for_saleng` — admin กด "Confirm" (เขียน `opened_at`) หรือซาเล้ง/admin ปฏิเสธ-ยกเลิกการจับคู่ (ล้าง field `assigned_saleng_*` เป็น `null`)
+- `pending_match_confirm` — ซาเล้งกดรับเอง (`match_channel: self_pick`, `saleng_accepted: true`) หรือ admin มอบหมาย (`admin_assign`, รอซาเล้งกดตอบรับ → `saleng_accepted: true`)
+- `confirmed` — admin กด "ยืนยันการจับคู่" (ได้เฉพาะเมื่อ `saleng_accepted`) — ลูกค้าเห็นชื่อ/เบอร์/ทะเบียนซาเล้ง
+- `completed` — ซาเล้งกด "ปิดงาน"
+- `cancelled` — admin กด "Reject" พร้อม `cancel_reason`
 
-ค่าที่เหลือ (`pending_match_confirm`, `confirmed`, `completed`) มีอยู่ใน seed data ([webapp/seed/seed.js](webapp/seed/seed.js)) และใน filter UI ของ admin dashboard เพื่อเตรียมไว้ แต่ยังไม่มี code path ใดเขียนค่าพวกนี้จริง (ต้องรอ flow การจับคู่สาเล้ง/ปิดงานซึ่งอยู่นอกขอบเขตตอนนี้)
+ข้อจำกัดที่รู้อยู่: กำหนดเวลายกเลิกของซาเล้งและโควตาคิว ตรวจฝั่ง client เท่านั้น (rules ตรวจแค่ว่าเปลี่ยนสถานะ/field ได้ตามสิทธิ์) และ rules ไม่ได้บังคับเรื่องตำบลตอนซาเล้งอ่านงานเปิด
 
 ### ข้อห้าม — ห้ามใส่คีย์ลงไฟล์ที่ push
 

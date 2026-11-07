@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>สมัครเป็นซาเล้ง — กรีนซาเล้ง</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../shared-styles.css">
+<link rel="stylesheet" href="../saleng-auth.css">
+</head>
+<!-- เปิดไฟล์นี้ตรงๆ (double-click) ได้เลย ไม่ต้องรัน server -->
+<body>
+<div class="page">
+  <div class="text-center"><span class="role-tag">🛺 สำหรับซาเล้ง</span></div>
+  <h1 class="h1">สมัครเป็นซาเล้ง</h1>
+  <div class="text-secondary text-center" style="margin-bottom:24px;">Admin จะตรวจสอบข้อมูลก่อนเปิดให้รับงาน</div>
+
+  <div class="card">
+    <div class="banner error" id="errorBanner"></div>
+
+    <form id="registerForm" novalidate>
+      <div class="section-label">ข้อมูลส่วนตัว</div>
+      <div class="field" id="field-full_name">
+        <label for="full_name">ชื่อ-นามสกุล <span class="req">*</span></label>
+        <input type="text" id="full_name" placeholder="เช่น สมชาย ขยันดี" autocomplete="name">
+        <div class="error-text">กรุณากรอกชื่อ-นามสกุล</div>
+      </div>
+
+      <div class="field" id="field-phone">
+        <label for="phone">เบอร์โทรศัพท์ <span class="req">*</span></label>
+        <input type="tel" id="phone" placeholder="08X-XXX-XXXX" autocomplete="tel">
+        <div class="hint">ใช้เข้าสู่ระบบ และแสดงให้ลูกค้าเห็นหลัง Admin ยืนยันงาน</div>
+        <div class="error-text">กรุณากรอกเบอร์โทรให้ถูกต้อง</div>
+      </div>
+
+      <div class="field" id="field-password">
+        <label for="password">รหัสผ่าน <span class="req">*</span></label>
+        <input type="password" id="password" placeholder="อย่างน้อย 6 ตัวอักษร" autocomplete="new-password">
+        <div class="error-text">รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร</div>
+      </div>
+
+      <div class="field" id="field-confirm_password">
+        <label for="confirm_password">ยืนยันรหัสผ่าน <span class="req">*</span></label>
+        <input type="password" id="confirm_password" placeholder="กรอกรหัสผ่านอีกครั้ง" autocomplete="new-password">
+        <div class="error-text">รหัสผ่านไม่ตรงกัน</div>
+      </div>
+
+      <div class="section-label">รถและพื้นที่รับงาน</div>
+      <div class="field" id="field-vehicle_plate">
+        <label for="vehicle_plate">ทะเบียนรถ <span class="req">*</span></label>
+        <input type="text" id="vehicle_plate" placeholder="เช่น 1กข 1234 เชียงราย">
+        <div class="error-text">กรุณากรอกทะเบียนรถ</div>
+      </div>
+
+      <div class="field" id="field-areas">
+        <label>ตำบลที่รับงาน <span class="req">*</span></label>
+        <div class="area-grid" id="areaGrid"></div>
+        <div class="hint">จะเห็นงานใหม่เฉพาะตำบลที่เลือก (งานตำบลอื่น Admin จะมอบหมายให้เป็นรายงาน)</div>
+        <div class="error-text">เลือกอย่างน้อย 1 ตำบล</div>
+      </div>
+
+      <div class="section-label">เอกสารประกอบการสมัคร</div>
+      <div class="field" id="field-vehicle_photo">
+        <label for="vehicle_photo">รูปรถซาเล้ง (เห็นป้ายทะเบียน) <span class="req">*</span></label>
+        <div class="photo-picker">
+          <div class="photo-preview" id="vehiclePreview">🛺</div>
+          <input type="file" id="vehicle_photo" accept="image/jpeg,image/png,image/webp">
+        </div>
+        <div class="error-text">กรุณาแนบรูปรถ</div>
+      </div>
+
+      <div class="field" id="field-id_card_photo">
+        <label for="id_card_photo">รูปบัตรประชาชน <span class="req">*</span></label>
+        <div class="photo-picker">
+          <div class="photo-preview" id="idCardPreview">🪪</div>
+          <input type="file" id="id_card_photo" accept="image/jpeg,image/png,image/webp">
+        </div>
+        <div class="notice">⚠️ ระบบนี้เป็นระบบทดสอบ — <b>ห้ามอัปโหลดบัตรประชาชนจริง</b> ให้ใช้รูปจำลอง/รูปตัวอย่างแทน<br>รูปนี้เห็นได้เฉพาะคุณและ Admin เท่านั้น</div>
+        <div class="error-text">กรุณาแนบรูปบัตร (ใช้รูปจำลองได้)</div>
+      </div>
+
+      <button type="submit" class="btn btn-primary" id="submitBtn">ส่งใบสมัคร</button>
+    </form>
+
+    <div class="link-row">มีบัญชีซาเล้งอยู่แล้ว? <a href="../login/index.html">เข้าสู่ระบบ</a></div>
+  </div>
+
+  <div class="link-row"><a href="../../index.html">← กลับหน้าแรก</a></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script src="../../firebase-config.js"></script>
+<script src="../../image-helpers.js"></script>
+<script src="../../saleng-helpers.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

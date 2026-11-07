@@ -1,0 +1,33 @@
+/* หน้าสมัคร/เข้าสู่ระบบของซาเล้ง — ต่อยอดจาก shared-styles.css */
+
+.role-tag {
+  display: inline-block; margin: 0 auto 8px; padding: 4px 12px; border-radius: var(--radius-full);
+  background: #FDE9D9; color: #8A5A15; font-size: 12px; font-weight: 700;
+}
+.text-center .role-tag { display: inline-block; }
+
+.section-label { font-size: 13px; font-weight: 700; color: var(--color-primary-700); margin: 22px 0 10px; }
+
+.area-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.area-item {
+  display: flex; align-items: center; gap: 8px; padding: 10px 12px; cursor: pointer;
+  border: 1.5px solid var(--color-neutral-300); border-radius: var(--radius-md); font-size: 14px;
+}
+.area-item input { width: 18px; height: 18px; accent-color: var(--color-primary-600); }
+.area-item.checked { border-color: var(--color-primary-600); background: var(--color-primary-100); }
+.field.has-error .area-grid .area-item { border-color: var(--color-danger); }
+
+.photo-picker { display: flex; align-items: center; gap: 12px; }
+.photo-preview {
+  width: 84px; height: 64px; flex-shrink: 0; border-radius: 10px; overflow: hidden;
+  background: var(--color-neutral-bg); border: 1.5px dashed var(--color-neutral-300);
+  display: flex; align-items: center; justify-content: center; font-size: 22px;
+}
+.photo-preview img { width: 100%; height: 100%; object-fit: cover; }
+.photo-picker input[type=file] { font-size: 13px; min-width: 0; }
+.field.has-error .photo-preview { border-color: var(--color-danger); }
+
+.notice {
+  font-size: 12px; line-height: 1.6; padding: 10px 12px; border-radius: 10px; margin-top: 8px;
+  background: #FFF6E5; color: #8A5A15;
+}

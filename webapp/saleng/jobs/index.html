@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>งานของซาเล้ง — กรีนซาเล้ง</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../saleng.css">
+</head>
+<!-- เปิดไฟล์นี้ตรงๆ (double-click) ได้เลย ไม่ต้องรัน server -->
+<body>
+<header class="s-header">
+  <div class="s-header-inner">
+    <div class="s-avatar" aria-hidden="true">🛺</div>
+    <div class="s-header-body">
+      <div class="s-hello" id="helloName">กำลังโหลด...</div>
+      <div class="s-areas" id="areaText"></div>
+    </div>
+    <button type="button" class="s-logout" id="logoutBtn">ออกจากระบบ</button>
+  </div>
+</header>
+
+<main class="s-page">
+  <div id="gate"></div>
+
+  <div id="workspace" hidden>
+    <div class="quota" id="quotaBox">
+      <div class="quota-label">งานที่ถืออยู่ (สูงสุด <span id="quotaMax"></span> งาน · รอบละ <span id="quotaSlot"></span> งาน)</div>
+      <div class="quota-bar"><span id="quotaBar"></span></div>
+      <div class="quota-value" id="quotaValue">0</div>
+    </div>
+
+    <div class="tabs" role="tablist">
+      <button type="button" class="tab active" role="tab" data-tab="new" aria-selected="true">งานใหม่ <span class="tab-count" id="countNew"></span></button>
+      <button type="button" class="tab" role="tab" data-tab="mine" aria-selected="false">งานของฉัน <span class="tab-count" id="countMine"></span></button>
+    </div>
+
+    <section id="tab-new">
+      <div id="assignedList"></div>
+      <div class="list-title">งานในตำบลของคุณ</div>
+      <div id="openList"><div class="empty-note">กำลังโหลด...</div></div>
+    </section>
+
+    <section id="tab-mine" hidden>
+      <div id="mineList"><div class="empty-note">กำลังโหลด...</div></div>
+    </section>
+  </div>
+</main>
+
+<div class="modal" id="reasonModal" role="dialog" aria-modal="true" aria-labelledby="reasonTitle">
+  <form class="modal-sheet" id="reasonForm">
+    <div class="modal-title" id="reasonTitle">ยกเลิกงาน</div>
+    <div class="modal-desc" id="reasonDesc"></div>
+    <div class="reason-list" id="reasonList"></div>
+    <input type="text" class="reason-other" id="reasonOther" placeholder="เหตุผลอื่น (พิมพ์เอง)" maxlength="200">
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" id="reasonCancelBtn">กลับ</button>
+      <button type="submit" class="btn btn-primary" id="reasonSubmitBtn">ยืนยัน</button>
+    </div>
+  </form>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script src="../../firebase-config.js"></script>
+<script src="../../notify-helpers.js"></script>
+<script src="../../saleng-helpers.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

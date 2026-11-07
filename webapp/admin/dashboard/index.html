@@ -29,7 +29,9 @@
   <div class="chip-row" id="filterRow" role="tablist" aria-label="กรองตามสถานะ">
     <button type="button" class="chip" role="tab" data-status="pending_admin_review">รอตรวจสอบ<span class="chip-count" data-count="pending_admin_review"></span></button>
     <button type="button" class="chip" role="tab" data-status="open_for_saleng">เปิดให้สาเล้งรับงาน<span class="chip-count" data-count="open_for_saleng"></span></button>
+    <button type="button" class="chip" role="tab" data-status="pending_match_confirm">รอยืนยันจับคู่<span class="chip-count" data-count="pending_match_confirm"></span></button>
     <button type="button" class="chip" role="tab" data-status="confirmed">ยืนยันแล้ว<span class="chip-count" data-count="confirmed"></span></button>
+    <button type="button" class="chip" role="tab" data-status="completed">เสร็จสิ้น<span class="chip-count" data-count="completed"></span></button>
     <button type="button" class="chip" role="tab" data-status="cancelled">ยกเลิกแล้ว<span class="chip-count" data-count="cancelled"></span></button>
     <button type="button" class="chip" role="tab" data-status="">ทั้งหมด<span class="chip-count" data-count=""></span></button>
   </div>
@@ -92,6 +94,8 @@
 <script src="../../notify-helpers.js"></script>
 <script src="../../image-helpers.js"></script>
 <script src="../admin-shell.js"></script>
+<script src="../../saleng-helpers.js"></script>
 <script src="app.js"></script>
+<script src="matching.js"></script>
 </body>
 </html>
