@@ -32,6 +32,12 @@ npm run report              # เปิดรายงาน HTML ของร�
 firebase emulators:start --only auth,firestore,hosting --project demo-callsaleng
 ```
 
+## รันอัตโนมัติบน GitHub (CI)
+
+[.github/workflows/e2e.yml](../.github/workflows/e2e.yml) รันเทสต์ทั้งหมดให้เองทุกครั้งที่ push เข้า `main` และทุก Pull Request
+(หรือกดรันเองได้ที่แท็บ Actions → e2e → Run workflow) — ใช้ emulator บนเครื่องของ GitHub ไม่ต้องตั้ง secret ใดๆ
+ถ้า fail ให้ดาวน์โหลด artifact `playwright-report` จากหน้าผลรัน แล้วเปิด `playwright-report/index.html` ดู screenshot/trace
+
 ## ทำงานยังไง
 
 - `webapp/firebase-config.js` สลับไปใช้ emulator **เฉพาะเมื่อเปิดผ่าน `127.0.0.1:5050`** (พอร์ตของ Hosting emulator)
