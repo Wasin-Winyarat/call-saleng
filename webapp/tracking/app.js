@@ -1,34 +1,14 @@
-const STATUS_LABEL = {
-  pending_admin_review: "รอ Admin ตรวจสอบ",
-  cancelled: "ยกเลิกแล้ว",
-  open_for_saleng: "เปิดให้สาเล้งรับงาน",
-  pending_match_confirm: "รอยืนยันการจับคู่",
-  confirmed: "ยืนยันแล้ว",
-  completed: "เสร็จสิ้น",
-};
+// หน้าติดตาม: รายการคำขอทั้งหมดของฉัน (real-time) — แต่ละการ์ดลิงก์ไปหน้ารายละเอียด (request-detail/)
+// และหน้าแชทของคำขอนั้น (chat/) — แก้ไข/ลบคำขอย้ายไปทำที่หน้ารายละเอียด
+// STATUS_LABEL / escapeHtml / detailUrl / chatUrl มาจาก request-helpers.js
 
 const requestList = document.getElementById("requestList");
-const toast = document.getElementById("toast");
 let currentUserId = null;
 let unsubscribeRequests = null;
-let chatListeners = new Map(); // requestId → unsubscribe ของ listener แชท
-let chatCache = new Map(); // requestId → ข้อความล่าสุด (เก็บไว้ render ซ้ำตอนการ์ดถูกสร้างใหม่)
-let openChats = new Set(); // requestId ที่เปิดกล่องแชทค้างไว้ — คงสถานะไว้ตอน re-render
+let chatListeners = new Map(); // requestId → unsubscribe ของ listener แชท (ใช้นับข้อความที่ยังไม่อ่าน)
+let chatCache = new Map(); // requestId → ข้อความทั้งหมด (คงไว้ตอนการ์ดถูกสร้างใหม่)
 let seen = null; // สถานะ "เห็นแล้ว" ปัจจุบัน (notify-helpers.js) — อัปเดตทันทีที่ render
 let seenAtLoad = null; // ภาพตอนเปิดหน้า — ใช้ตัดสินว่าสถานะไหน "ใหม่" ระหว่างที่เปิดหน้านี้อยู่
-
-function escapeHtml(str) {
-  const div = document.createElement("div");
-  div.textContent = str || "";
-  return div.innerHTML;
-}
-
-function showToast(message, isError = false) {
-  toast.textContent = message;
-  toast.classList.toggle("error", isError);
-  toast.classList.add("show");
-  setTimeout(() => toast.classList.remove("show"), 3200);
-}
 
 // ---------- auth guard ----------
 auth.onAuthStateChanged((user) => {
@@ -42,7 +22,6 @@ auth.onAuthStateChanged((user) => {
   chatListeners.forEach((unsubscribe) => unsubscribe());
   chatListeners = new Map();
   chatCache = new Map();
-  openChats = new Set();
   requestList.innerHTML = '<div class="empty-note">กำลังโหลด...</div>';
 
   currentUserId = user.uid;
@@ -85,167 +64,49 @@ function subscribeMyRequests() {
 function renderRequestCard(id, data) {
   const card = document.createElement("div");
   card.className = "request-card";
-
-  const top = document.createElement("div");
-  top.className = "request-card-top";
-
-  const thumb = document.createElement("div");
-  thumb.className = "request-card-thumb";
-  thumb.textContent = "♻️";
-
-  const body = document.createElement("div");
-  body.className = "request-card-body";
-  body.innerHTML = `
-    <div class="request-card-title">${escapeHtml((data.waste_types || []).join(", ") || "-")}</div>
-    <div class="request-card-meta">📍 ${escapeHtml(data.sub_district || "-")} — ${escapeHtml(data.address_text || "-")}</div>
-    <div class="request-card-meta">🗓️ นัด ${escapeHtml(data.requested_date || "-")} · ${escapeHtml(data.time_slot || "-")}</div>
-    ${data.notes ? `<div class="request-card-meta">หมายเหตุ: ${escapeHtml(data.notes)}</div>` : ""}
-    <div class="status-row">
-      <div class="status-pill ${data.status}">${STATUS_LABEL[data.status] || data.status || "-"}</div>
-      ${hasStatusUpdate(seenAtLoad, id, data.status) ? '<span class="new-badge">อัปเดตใหม่</span>' : ""}
+  card.innerHTML = `
+    <a class="request-card-top request-card-link" href="${detailUrl(id)}">
+      <div class="request-card-thumb">♻️</div>
+      <div class="request-card-body">
+        <div class="request-card-title">${escapeHtml((data.waste_types || []).join(", ") || "-")}</div>
+        <div class="request-card-meta">📍 ${escapeHtml(data.sub_district || "-")} — ${escapeHtml(data.address_text || "-")}</div>
+        <div class="request-card-meta">🗓️ นัด ${escapeHtml(data.requested_date || "-")} · ${escapeHtml(data.time_slot || "-")}</div>
+        <div class="status-row">
+          ${statusPillHtml(data.status)}
+          ${hasStatusUpdate(seenAtLoad, id, data.status) ? '<span class="new-badge">อัปเดตใหม่</span>' : ""}
+        </div>
+      </div>
+      <span class="request-card-chevron" aria-hidden="true">›</span>
+    </a>
+    <div class="action-row">
+      <a class="btn btn-secondary" href="${detailUrl(id)}">ดูรายละเอียด</a>
+      <a class="btn btn-secondary" href="${chatUrl(id)}">💬 แชทกับ Admin <span class="count-badge" id="chat-badge-${id}" hidden></span></a>
     </div>
   `;
-
-  top.appendChild(thumb);
-  top.appendChild(body);
-  card.appendChild(top);
-
-  if (data.status === "pending_admin_review") {
-    card.appendChild(buildOwnerActions(id));
-  }
-
-  card.appendChild(buildChatSection(id));
   return card;
 }
 
-// ---------- แก้ไข/ลบคำขอของตัวเอง — ทำได้เฉพาะตอนยัง "รอ Admin ตรวจสอบ" เท่านั้น ----------
-function buildOwnerActions(id) {
-  const row = document.createElement("div");
-  row.className = "action-row";
-  row.innerHTML = `
-    <a class="btn btn-secondary" href="../pickup-request/index.html?edit=${id}">✏️ แก้ไข</a>
-    <button type="button" class="btn btn-danger" id="delete-request-${id}">🗑️ ลบ</button>
-  `;
-
-  row.querySelector(`#delete-request-${id}`).addEventListener("click", async () => {
-    if (!window.confirm("ลบคำขอนี้? การลบไม่สามารถย้อนกลับได้")) return;
-    try {
-      // ลบรูปถ่ายขยะที่แนบไว้ (request_photos) ก่อน แล้วค่อยลบตัวคำขอ ใน batch เดียวกัน
-      const photoSnap = await db.collection("request_photos")
-        .where("request_id", "==", id)
-        .where("user_id", "==", auth.currentUser.uid)
-        .get();
-      const batch = db.batch();
-      photoSnap.docs.forEach((doc) => batch.delete(doc.ref));
-      batch.delete(db.collection("pickup_requests").doc(id));
-      await batch.commit();
-      showToast("ลบคำขอแล้ว");
-    } catch (err) {
-      console.error(err);
-      showToast("ลบคำขอไม่สำเร็จ", true);
-    }
-  });
-
-  return row;
-}
-
-// ---------- chat thread ต่อคำขอ (chat_messages, sender_role: "user") ----------
-function buildChatSection(requestId) {
-  const wrap = document.createElement("div");
-  wrap.innerHTML = `
-    <button type="button" class="chat-toggle" data-request-id="${requestId}">💬 ข้อความกับ Admin <span class="count-badge" id="chat-badge-${requestId}" hidden></span></button>
-    <div class="chat-panel${openChats.has(requestId) ? " open" : ""}" id="chat-panel-${requestId}">
-      <div class="chat-messages" id="chat-messages-${requestId}">
-        <div class="chat-empty">ยังไม่มีข้อความ</div>
-      </div>
-      <div class="chat-input-row">
-        <input type="text" id="chat-input-${requestId}" placeholder="พิมพ์ข้อความถึง Admin...">
-        <button type="button" id="chat-send-${requestId}">ส่ง</button>
-      </div>
-    </div>
-  `;
-
-  const toggleBtn = wrap.querySelector(".chat-toggle");
-  const panel = wrap.querySelector(`#chat-panel-${requestId}`);
-  toggleBtn.addEventListener("click", () => {
-    panel.classList.toggle("open");
-    if (panel.classList.contains("open")) {
-      openChats.add(requestId);
-      renderChat(requestId);
-    } else {
-      openChats.delete(requestId);
-    }
-  });
-
-  const sendMessage = async () => {
-    const input = document.getElementById(`chat-input-${requestId}`);
-    const text = input.value.trim();
-    if (!text || !currentUserId) return;
-    input.value = "";
-    try {
-      await db.collection("chat_messages").doc().set({
-        request_id: requestId,
-        sender_role: "user",
-        sender_id: currentUserId,
-        message_text: text,
-        sent_at: firebase.firestore.FieldValue.serverTimestamp(),
-      });
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  wrap.querySelector(`#chat-send-${requestId}`).addEventListener("click", sendMessage);
-  wrap.querySelector(`#chat-input-${requestId}`).addEventListener("keydown", (e) => {
-    if (e.key === "Enter") sendMessage();
-  });
-
-  return wrap;
-}
-
+// ---------- นับข้อความใหม่จาก Admin ต่อคำขอ (แสดงเป็นตัวเลขบนปุ่มแชท) ----------
 function subscribeChat(requestId) {
   if (chatListeners.has(requestId)) {
-    renderChat(requestId); // การ์ดถูกสร้างใหม่ — วาดข้อความจาก cache ทันที ไม่ต้องรอ snapshot ถัดไป
+    renderChatBadge(requestId); // การ์ดถูกสร้างใหม่ — วาด badge จาก cache ทันที ไม่ต้องรอ snapshot ถัดไป
     return;
   }
 
   const unsubscribe = db.collection("chat_messages")
     .where("request_id", "==", requestId)
-    .orderBy("sent_at", "asc")
     .onSnapshot((snapshot) => {
       chatCache.set(requestId, snapshot.docs.map((docSnap) => docSnap.data()));
-      renderChat(requestId);
+      renderChatBadge(requestId);
     }, (err) => console.error("โหลดแชทไม่สำเร็จ", err));
   chatListeners.set(requestId, unsubscribe);
 }
 
-function renderChat(requestId) {
-  const container = document.getElementById(`chat-messages-${requestId}`);
-  const messages = chatCache.get(requestId);
-  if (!container || !messages) return;
-
-  // เปิดกล่องแชทอยู่ = อ่านแล้ว
-  if (openChats.has(requestId)) {
-    seen.chat[requestId] = Math.max(seen.chat[requestId] || 0, latestMessageMillis(messages));
-    saveSeenState(currentUserId, seen);
-  }
+function renderChatBadge(requestId) {
   const badge = document.getElementById(`chat-badge-${requestId}`);
+  const messages = chatCache.get(requestId);
+  if (!badge || !messages) return;
   const unread = countUnreadAdminMessages(seen, requestId, messages);
   badge.textContent = unread;
   badge.hidden = unread === 0;
-
-  if (!messages.length) {
-    container.innerHTML = '<div class="chat-empty">ยังไม่มีข้อความ</div>';
-    return;
-  }
-
-  container.innerHTML = "";
-  messages.forEach((msg) => {
-    const isMine = msg.sender_role === "user";
-    const bubble = document.createElement("div");
-    bubble.className = `chat-bubble ${isMine ? "mine" : "theirs"}`;
-    bubble.innerHTML = `<div class="who">${isMine ? "คุณ" : "Admin"}</div>${escapeHtml(msg.message_text)}`;
-    container.appendChild(bubble);
-  });
-  container.scrollTop = container.scrollHeight;
 }

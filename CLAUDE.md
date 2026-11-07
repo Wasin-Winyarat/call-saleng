@@ -40,6 +40,7 @@ webapp/
   firebase-config.js     Firebase compat SDK init (ใช้ร่วมทุกหน้า)
   auth-helpers.js         normalizePhone / phoneToEmail / adminIdToEmail
   image-helpers.js        compressImage() ย่อรูปเป็น JPEG base64 ≤ 700k ตัวอักษร (รูปขยะ + banner) + SAFE_IMAGE_DATA
+  request-helpers.js      STATUS_LABEL / progressStepsHtml / detailUrl / chatUrl / deleteRequestWithPhotos (+ request-progress.css)
   banner-helpers.js       isBannerLive / SAFE_BANNER_LINK ของ ad_banners (ใช้ทั้งหน้าหลัก user และ admin/banners/)
   bottom-nav.js/.css      แถบเมนูด้านล่างของหน้าฝั่ง user (mobile-first) — แต่ละหน้าใส่ <body data-nav="..."> + badge เมนู "ติดตาม"
   notify-helpers.js       badge แจ้งเตือนฝั่ง user (ข้อความใหม่จาก Admin / สถานะเปลี่ยน) — เก็บสถานะ "เห็นแล้ว" ใน localStorage
@@ -48,6 +49,8 @@ webapp/
   dashboard/              user home หลัง login
   pickup-request/         ฟอร์มสร้างคำขอเรียกรถซาเล้ง (เขียนลง Firestore collection pickup_requests)
   tracking/, prices/, profile/   หน้า user เพิ่มเติม
+  request-detail/         รายละเอียดคำขอ 1 รายการ (?id=) + แก้ไข/ลบ
+  chat/                   แชทกับ Admin แยกต่อคำขอ (?id=) เต็มจอ
   admin/                  admin login + admin/dashboard/ (accept/cancel/change-time, chat) + admin/banners/ (จัดการ banner หน้าหลัก user)
   seed/                   สคริปต์ seed ข้อมูลตัวอย่างลง Firestore สำหรับ dev/demo
 ```

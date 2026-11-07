@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>รายละเอียดคำขอ — กรีนซาเล้ง</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../tracking/styles.css">
+<link rel="stylesheet" href="../request-progress.css">
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="../bottom-nav.css">
+</head>
+<!-- เปิดไฟล์นี้ตรงๆ (double-click) ได้เลย ไม่ต้องรัน server — ใช้ ?id=<pickup_request id> -->
+<body data-nav="tracking">
+<div class="page">
+  <div class="topbar">
+    <a class="back-chevron" href="../tracking/index.html" id="backLink" aria-label="ย้อนกลับ">←</a>
+    <div class="topbar-title">รายละเอียดคำขอ</div>
+  </div>
+
+  <div id="detail">
+    <div class="empty-note">กำลังโหลด...</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script src="../firebase-config.js"></script>
+<script src="../notify-helpers.js"></script>
+<script src="../image-helpers.js"></script>
+<script src="../request-helpers.js"></script>
+<script src="app.js"></script>
+<script src="../bottom-nav.js"></script>
+</body>
+</html>

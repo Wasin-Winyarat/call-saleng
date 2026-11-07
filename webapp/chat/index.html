@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>แชทกับ Admin — กรีนซาเล้ง</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../tracking/styles.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+<!-- เปิดไฟล์นี้ตรงๆ (double-click) ได้เลย ไม่ต้องรัน server — ใช้ ?id=<pickup_request id>
+     หน้าแชทเต็มจอแบบแอปส่งข้อความ จึงไม่มีแถบเมนูด้านล่าง (ช่องพิมพ์อยู่ตรงนั้นแทน) -->
+<body>
+<div class="chat-screen">
+  <header class="chat-header">
+    <a class="back-chevron" href="../tracking/index.html" id="backLink" aria-label="ย้อนกลับ">←</a>
+    <div class="chat-header-body">
+      <div class="chat-header-title">แชทกับ Admin</div>
+      <a class="chat-header-sub" id="requestSummary" href="#">กำลังโหลด...</a>
+    </div>
+  </header>
+
+  <main class="chat-thread" id="chatThread" aria-live="polite">
+    <div class="chat-empty">กำลังโหลด...</div>
+  </main>
+
+  <form class="chat-composer" id="chatForm" autocomplete="off">
+    <input type="text" id="chatInput" placeholder="พิมพ์ข้อความถึง Admin..." maxlength="1000" disabled>
+    <button type="submit" id="chatSend" disabled aria-label="ส่งข้อความ">ส่ง</button>
+  </form>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script src="../firebase-config.js"></script>
+<script src="../notify-helpers.js"></script>
+<script src="../request-helpers.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

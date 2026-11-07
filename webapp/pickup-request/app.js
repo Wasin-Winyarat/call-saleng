@@ -356,7 +356,7 @@ form.addEventListener("submit", async (e) => {
       await db.collection("pickup_requests").doc(editRequestId).update(payload);
       await savePhotos(editRequestId);
       showToast("บันทึกการแก้ไขสำเร็จ");
-      window.location.href = "../tracking/index.html";
+      window.location.href = `../request-detail/index.html?id=${encodeURIComponent(editRequestId)}`;
       return;
     }
 

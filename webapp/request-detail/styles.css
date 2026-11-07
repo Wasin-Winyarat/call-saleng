@@ -1,0 +1,40 @@
+/* หน้ารายละเอียดคำขอ — ต่อยอดจาก ../tracking/styles.css (tokens/การ์ด/ปุ่ม/toast เดียวกัน) */
+
+.detail-card {
+  background: var(--color-neutral-card); border: 1px solid var(--color-neutral-300);
+  border-radius: var(--radius-md); padding: 16px; margin-top: 16px;
+}
+.detail-card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.detail-card-title { font-size: 15px; font-weight: 700; }
+.detail-hint {
+  font-size: 13px; color: var(--color-primary-700); background: var(--color-primary-100);
+  border-radius: 10px; padding: 8px 12px; text-align: center;
+}
+.detail-hint.cancelled { color: var(--color-danger); background: #FBEBE3; text-align: left; }
+
+.info-list { margin: 0; }
+.info-row { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--color-neutral-300); font-size: 14px; }
+.info-row:last-child { border-bottom: none; padding-bottom: 0; }
+.info-row dt { width: 104px; flex-shrink: 0; color: var(--color-text-secondary); }
+.info-row dd { margin: 0; flex: 1; min-width: 0; word-break: break-word; }
+
+.photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+.photo-grid button { padding: 0; border: none; background: var(--color-neutral-300); aspect-ratio: 1; border-radius: 10px; overflow: hidden; cursor: zoom-in; }
+.photo-grid img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.photo-viewer {
+  position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center;
+  background: rgba(0, 0, 0, .85); padding: 16px; cursor: zoom-out;
+}
+.photo-viewer img { max-width: 100%; max-height: 100%; border-radius: var(--radius-md); }
+
+.chat-cta {
+  display: flex; align-items: center; gap: 12px; margin-top: 16px; padding: 14px 16px;
+  background: var(--color-primary-600); color: #fff; border-radius: var(--radius-md); text-decoration: none;
+}
+.chat-cta-body { flex: 1; }
+.chat-cta-title { font-weight: 700; font-size: 15px; }
+.chat-cta-desc { font-size: 12px; opacity: .85; }
+.chat-cta .count-badge { background: #fff; color: var(--color-danger); }
+
+.btn-edit { background: var(--color-neutral-card); color: var(--color-primary-600); border: 1.5px solid var(--color-primary-600); }

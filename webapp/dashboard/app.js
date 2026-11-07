@@ -9,15 +9,6 @@ const bannerCarousel = document.getElementById("bannerCarousel");
 const bannerTrack = document.getElementById("bannerTrack");
 const bannerDots = document.getElementById("bannerDots");
 
-const STATUS_LABEL = {
-  pending_admin_review: "รอตรวจสอบ",
-  cancelled: "ยกเลิกแล้ว",
-  open_for_saleng: "รอสาเล้งรับงาน",
-  pending_match_confirm: "รอยืนยันการจับคู่",
-  confirmed: "ยืนยันแล้ว",
-  completed: "เสร็จสิ้น",
-};
-
 pointsValue.textContent = MOCKUP_POINTS;
 
 auth.onAuthStateChanged(async (user) => {
@@ -119,29 +110,14 @@ bannerTrack.addEventListener("touchstart", () => clearInterval(bannerTimer), { p
 }));
 
 // ---------- คำขอที่กำลังดำเนินการ (ล่าสุดที่ยังไม่ยกเลิก/ไม่เสร็จสิ้น) พร้อมแถบขั้นตอน (real-time) ----------
-const PROGRESS_STEPS = [
-  { label: "ส่งคำขอ", statuses: ["pending_admin_review"] },
-  { label: "Admin ยืนยัน", statuses: ["open_for_saleng"] },
-  { label: "สาเล้งรับงาน", statuses: ["pending_match_confirm", "confirmed"] },
-  { label: "เสร็จสิ้น", statuses: ["completed"] },
-];
-
-const STATUS_HINT = {
-  pending_admin_review: "Admin กำลังตรวจสอบคำขอของคุณ",
-  open_for_saleng: "Admin ยืนยันแล้ว กำลังหาสาเล้งมารับงาน",
-  pending_match_confirm: "มีสาเล้งรับงานแล้ว รอยืนยันการจับคู่",
-  confirmed: "สาเล้งจะเข้ารับตามวันเวลาที่นัดไว้",
-};
-
-const FINISHED_STATUSES = ["cancelled", "completed"];
-
+// STATUS_LABEL / STATUS_HINT / progressStepsHtml / detailUrl / chatUrl มาจาก request-helpers.js
 function subscribeActiveRequest(uid) {
   db.collection("pickup_requests")
     .where("user_id", "==", uid)
     .orderBy("created_at", "desc")
     .onSnapshot((snapshot) => {
       const active = snapshot.docs
-        .map((docSnap) => docSnap.data())
+        .map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }))
         .filter((data) => !FINISHED_STATUSES.includes(data.status));
       renderActiveRequest(active[0], active.length - 1);
     }, (err) => {
@@ -156,12 +132,6 @@ function renderActiveRequest(data, othersCount) {
     return;
   }
 
-  const currentStep = PROGRESS_STEPS.findIndex((step) => step.statuses.includes(data.status));
-  const stepsHtml = PROGRESS_STEPS.map((step, i) => {
-    const state = i < currentStep ? "done" : (i === currentStep ? "current" : "");
-    return `<li class="progress-step ${state}"><span class="progress-dot">${i < currentStep ? "✓" : i + 1}</span><span class="progress-label">${step.label}</span></li>`;
-  }).join("");
-
   activeRequest.innerHTML = `
     <div class="active-card">
       <div class="active-card-top">
@@ -171,23 +141,17 @@ function renderActiveRequest(data, othersCount) {
           <div class="active-card-meta">🗓️ นัด ${escapeHtml(data.requested_date || "-")} · ${escapeHtml(data.time_slot || "-")}</div>
           <div class="active-card-meta">📍 ${escapeHtml(data.sub_district || "-")}</div>
         </div>
-        <span class="status-pill ${escapeHtml(data.status)}">${escapeHtml(STATUS_LABEL[data.status] || data.status || "-")}</span>
+        ${statusPillHtml(data.status)}
       </div>
-      <ol class="progress-steps">${stepsHtml}</ol>
+      ${progressStepsHtml(data.status)}
       <div class="active-card-hint">${escapeHtml(STATUS_HINT[data.status] || "")}</div>
       <div class="active-card-actions">
-        <a class="btn-outline" href="../tracking/index.html">💬 แชทกับ Admin</a>
-        <a class="btn-solid" href="../tracking/index.html">ดูรายละเอียด</a>
+        <a class="btn-outline" href="${chatUrl(data.id)}">💬 แชทกับ Admin</a>
+        <a class="btn-solid" href="${detailUrl(data.id)}">ดูรายละเอียด</a>
       </div>
     </div>
     ${othersCount > 0 ? `<a class="active-more" href="../tracking/index.html">+ อีก ${othersCount} คำขอที่กำลังดำเนินการ ›</a>` : ""}
   `;
-}
-
-function escapeHtml(str) {
-  const div = document.createElement("div");
-  div.textContent = str || "";
-  return div.innerHTML;
 }
 
 logoutLink.addEventListener("click", async (e) => {

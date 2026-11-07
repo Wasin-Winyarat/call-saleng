@@ -1,0 +1,19 @@
+/* แถบขั้นตอนของคำขอ (progressStepsHtml ใน request-helpers.js) — ใช้ token สีของแต่ละหน้า */
+
+.progress-steps { list-style: none; display: grid; grid-template-columns: repeat(4, 1fr); margin: 18px 0 10px; padding: 0; }
+.progress-step { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; }
+.progress-step::before {
+  content: ""; position: absolute; top: 12px; right: 50%; width: 100%; height: 2px; background: var(--color-neutral-300);
+}
+.progress-step:first-child::before { display: none; }
+.progress-step.done::before, .progress-step.current::before { background: var(--color-primary-600); }
+.progress-dot {
+  position: relative; z-index: 1; width: 26px; height: 26px; border-radius: var(--radius-full);
+  display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700;
+  background: var(--color-neutral-card); border: 2px solid var(--color-neutral-300); color: var(--color-text-secondary);
+}
+.progress-step.done .progress-dot { background: var(--color-primary-600); border-color: var(--color-primary-600); color: #fff; }
+.progress-step.current .progress-dot { border-color: var(--color-primary-600); color: var(--color-primary-600); box-shadow: 0 0 0 4px var(--color-primary-100); }
+.progress-label { font-size: 11px; color: var(--color-text-secondary); line-height: 1.3; }
+.progress-step.current .progress-label { color: var(--color-primary-700); font-weight: 700; }
+
