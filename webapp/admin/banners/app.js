@@ -1,4 +1,3 @@
-const adminBar = document.getElementById("adminBar");
 const bannerForm = document.getElementById("bannerForm");
 const formTitle = document.getElementById("formTitle");
 const imageInput = document.getElementById("bannerImageInput");
@@ -48,7 +47,14 @@ auth.onAuthStateChanged(async (user) => {
       return;
     }
 
-    adminBar.innerHTML = `<a href="../dashboard/index.html">← กลับไปหน้ารายการคำขอ</a> · สวัสดี <b>${escapeHtml(profileSnap.data().full_name)}</b>`;
+    renderAdminHeader({
+      active: "banners",
+      name: profileSnap.data().full_name,
+      onLogout: async () => {
+        await auth.signOut();
+        window.location.href = "../index.html";
+      },
+    });
     subscribeBanners();
   } catch (err) {
     console.error(err);

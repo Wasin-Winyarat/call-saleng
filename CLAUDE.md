@@ -51,7 +51,7 @@ webapp/
   tracking/, prices/, profile/   หน้า user เพิ่มเติม
   request-detail/         รายละเอียดคำขอ 1 รายการ (?id=) + แก้ไข/ลบ
   chat/                   แชทกับ Admin แยกต่อคำขอ (?id=) เต็มจอ
-  admin/                  admin login + admin/dashboard/ (accept/cancel/change-time, chat) + admin/banners/ (จัดการ banner หน้าหลัก user)
+  admin/                  admin login + admin/dashboard/ (accept/cancel/change-time, chat) + admin/banners/ (จัดการ banner หน้าหลัก user) — แถบหัวร่วม admin/admin-shell.js/.css
   seed/                   สคริปต์ seed ข้อมูลตัวอย่างลง Firestore สำหรับ dev/demo
 ```
 

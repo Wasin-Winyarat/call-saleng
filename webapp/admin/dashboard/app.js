@@ -7,7 +7,6 @@ const STATUS_LABEL = {
   completed: "เสร็จสิ้น",
 };
 
-const adminBar = document.getElementById("adminBar");
 const filterRow = document.getElementById("filterRow");
 const requestList = document.getElementById("requestList");
 const toast = document.getElementById("toast");
@@ -95,15 +94,14 @@ auth.onAuthStateChanged(async (user) => {
 
     currentAdminUid = user.uid;
     currentAdminName = profileSnap.data().full_name;
-    adminBar.innerHTML = `<a href="../banners/index.html">🖼️ จัดการ Banner</a> · <a href="#" id="aiSettingsLink">⚙️ ตั้งค่า AI</a> · สวัสดี <b>${escapeHtml(currentAdminName)}</b> · <a href="#" id="logoutLink">ออกจากระบบ</a>`;
-    document.getElementById("aiSettingsLink").addEventListener("click", (e) => {
-      e.preventDefault();
-      openAiSettings();
-    });
-    document.getElementById("logoutLink").addEventListener("click", async (e) => {
-      e.preventDefault();
-      await auth.signOut();
-      window.location.href = "../index.html";
+    renderAdminHeader({
+      active: "requests",
+      name: currentAdminName,
+      onAiSettings: openAiSettings,
+      onLogout: async () => {
+        await auth.signOut();
+        window.location.href = "../index.html";
+      },
     });
 
     adminSeen = loadSeenState(currentAdminUid);
@@ -120,8 +118,12 @@ filterRow.querySelectorAll(".chip").forEach((chip) => {
   chip.classList.toggle("active", chip.dataset.status === currentFilter);
   chip.addEventListener("click", () => {
     currentFilter = chip.dataset.status;
-    filterRow.querySelectorAll(".chip").forEach((el) => el.classList.toggle("active", el === chip));
-    subscribeRequests();
+    filterRow.querySelectorAll(".chip").forEach((el) => {
+      el.classList.toggle("active", el === chip);
+      el.setAttribute("aria-selected", el === chip ? "true" : "false");
+    });
+    summarizeAllResult.hidden = true;
+    renderRequestList();
   });
 });
 
@@ -164,35 +166,45 @@ function requestToAiContextRaw(data) {
   };
 }
 
-// ---------- request list (real-time, filter ตาม currentFilter) ----------
+// ---------- request list (real-time) ----------
+// ฟังคำขอทั้งหมดครั้งเดียว แล้วกรองตาม currentFilter ฝั่ง client — ได้ตัวเลขนับต่อสถานะบนแท็บด้วย
+// และสลับแท็บได้ทันทีโดยไม่ต้องสร้าง listener ใหม่
+let allRequests = []; // [{ id, data }] เรียงใหม่สุดก่อน
+
 function subscribeRequests() {
   if (unsubscribeRequests) unsubscribeRequests();
 
-  const base = db.collection("pickup_requests");
-  const q = currentFilter
-    ? base.where("status", "==", currentFilter).orderBy("created_at", "desc")
-    : base.orderBy("created_at", "desc");
-
-  unsubscribeRequests = q.onSnapshot(
+  unsubscribeRequests = db.collection("pickup_requests").orderBy("created_at", "desc").onSnapshot(
     (snapshot) => {
       summarizeAllResult.hidden = true;
-      if (snapshot.empty) {
-        lastLoadedRequests = [];
-        requestList.innerHTML = '<div class="empty-note">ไม่มีคำขอในหมวดนี้</div>';
-        return;
-      }
-      requestList.innerHTML = "";
-      lastLoadedRequests = [];
-      snapshot.forEach((docSnap) => {
-        lastLoadedRequests.push(docSnap.data());
-        requestList.appendChild(renderRequestCard(docSnap.id, docSnap.data()));
-      });
+      allRequests = snapshot.docs.map((docSnap) => ({ id: docSnap.id, data: docSnap.data() }));
+      renderStatusCounts();
+      renderRequestList();
     },
     (err) => {
       console.error(err);
       requestList.innerHTML = `<div class="empty-note">โหลดรายการไม่สำเร็จ (${err.code === "permission-denied" ? "บัญชีนี้ไม่มีสิทธิ์ admin ตาม Security Rules" : "ลองรีเฟรชหน้าใหม่"})</div>`;
     },
   );
+}
+
+function renderStatusCounts() {
+  filterRow.querySelectorAll(".chip-count").forEach((el) => {
+    const status = el.dataset.count;
+    const count = status ? allRequests.filter((r) => r.data.status === status).length : allRequests.length;
+    el.textContent = count;
+  });
+}
+
+function renderRequestList() {
+  const visible = currentFilter ? allRequests.filter((r) => r.data.status === currentFilter) : allRequests;
+  lastLoadedRequests = visible.map((r) => r.data);
+  if (!visible.length) {
+    requestList.innerHTML = '<div class="empty-note">ไม่มีคำขอในหมวดนี้</div>';
+    return;
+  }
+  requestList.innerHTML = "";
+  visible.forEach((r) => requestList.appendChild(renderRequestCard(r.id, r.data)));
 }
 
 function renderRequestCard(id, data) {

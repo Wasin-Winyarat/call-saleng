@@ -28,7 +28,7 @@ body {
   line-height: 1.5;
 }
 
-.page { max-width: 720px; margin: 0 auto; padding: 28px 20px 64px; }
+.page { max-width: 960px; margin: 0 auto; padding: 28px 20px 64px; }
 
 .topbar { display: flex; align-items: center; justify-content: space-between; }
 h1.h1 { font-size: 24px; font-weight: 700; margin: 0; }
@@ -36,14 +36,27 @@ h1.h1 { font-size: 24px; font-weight: 700; margin: 0; }
 .admin-bar a { color: var(--color-primary-600); font-weight: 600; text-decoration: none; }
 .text-secondary { color: var(--color-text-secondary); font-size: 14px; }
 
-.chip-row { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 18px; padding-bottom: 4px; }
-.chip {
-  flex-shrink: 0; padding: 8px 14px; border-radius: var(--radius-full);
-  font-size: 13px; font-weight: 600; border: 1px solid var(--color-neutral-300);
-  background: var(--color-neutral-card); color: var(--color-text-primary); cursor: pointer;
-  white-space: nowrap;
+/* แท็บกรองสถานะ (เส้นใต้ + ตัวเลขนับ) */
+.chip-row {
+  display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none;
+  border-bottom: 1px solid var(--color-neutral-300); margin-bottom: 16px;
 }
-.chip.active { background: var(--color-primary-600); color: #fff; border-color: var(--color-primary-600); }
+.chip-row::-webkit-scrollbar { display: none; }
+.chip {
+  flex-shrink: 0; display: flex; align-items: center; gap: 8px; padding: 10px 14px; margin-bottom: -1px;
+  font: inherit; font-size: 14px; font-weight: 600; color: var(--color-text-secondary); white-space: nowrap;
+  background: none; border: none; border-bottom: 3px solid transparent; cursor: pointer;
+}
+.chip:hover { color: var(--color-text-primary); }
+.chip.active { color: var(--color-primary-700); border-bottom-color: var(--color-primary-600); }
+.chip-count {
+  min-width: 22px; height: 20px; padding: 0 7px; border-radius: var(--radius-full);
+  background: var(--color-neutral-300); color: var(--color-text-secondary);
+  font-size: 12px; font-weight: 700; line-height: 20px; text-align: center;
+}
+.chip-count:empty { display: none; }
+.chip.active .chip-count { background: var(--color-primary-100); color: var(--color-primary-700); }
+.ai-summary-all-output { margin-bottom: 16px; }
 
 .empty-note { text-align: center; color: var(--color-text-secondary); font-size: 14px; padding: 40px 0; }
 
@@ -171,7 +184,7 @@ button.photo-thumb { padding: 0; border: none; background: none; cursor: zoom-in
 }
 .modal-reason:focus { outline: none; border-color: var(--color-primary-600); }
 .modal-actions { display: flex; flex-direction: column; gap: 8px; }
-.modal-actions .btn[hidden] { display: none; }
+.btn[hidden] { display: none; }
 .ai-key-label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 6px; }
 .ai-key-input {
   width: 100%; box-sizing: border-box; padding: 10px 12px; margin-bottom: 8px; font: inherit; font-size: 14px;

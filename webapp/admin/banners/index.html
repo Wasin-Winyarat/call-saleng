@@ -8,16 +8,18 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../dashboard/styles.css">
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="../admin-shell.css">
 </head>
 <!-- เปิดไฟล์นี้ตรงๆ (double-click) ได้เลย ไม่ต้องรัน server -->
 <body>
+<header class="admin-header" id="adminHeader"></header>
+
 <div class="page">
-  <div class="topbar">
-    <h1 class="h1">จัดการ Banner</h1>
-    <div id="adminBar" class="admin-bar"></div>
-  </div>
-  <div class="text-secondary" style="margin-bottom:16px;">
-    Banner ประชาสัมพันธ์ที่แสดงบนหน้าหลักของ user (collection <code>ad_banners</code>) — แสดงเฉพาะที่สถานะ "เผยแพร่" และอยู่ในช่วงวันที่กำหนด
+  <div class="page-head">
+    <div>
+      <h1 class="page-head-title">Banner ประชาสัมพันธ์</h1>
+      <div class="page-head-sub">แสดงบนหน้าหลักของ user เฉพาะที่ "เผยแพร่" และอยู่ในช่วงวันที่กำหนด (collection <code>ad_banners</code>)</div>
+    </div>
   </div>
 
   <form class="banner-form" id="bannerForm" novalidate>
@@ -81,6 +83,7 @@
 <script src="../../firebase-config.js"></script>
 <script src="../../image-helpers.js"></script>
 <script src="../../banner-helpers.js"></script>
+<script src="../admin-shell.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

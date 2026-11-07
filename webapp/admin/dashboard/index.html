@@ -7,30 +7,34 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="../admin-shell.css">
 </head>
 <!-- เปิดไฟล์นี้ตรงๆ (double-click) ได้เลย ไม่ต้องรัน server -->
 <body>
+<header class="admin-header" id="adminHeader"></header>
+
 <div class="page">
-  <div class="topbar">
-    <h1 class="h1">Admin Dashboard</h1>
-    <div id="adminBar" class="admin-bar"></div>
+  <div class="page-head">
+    <div>
+      <h1 class="page-head-title">คำขอเรียกรถซาเล้ง</h1>
+      <div class="page-head-sub">อัปเดตอัตโนมัติแบบ real-time — กดที่คำขอเพื่อดูรายละเอียด ยืนยัน/ปฏิเสธ และแชทกับลูกค้า</div>
+    </div>
+    <div class="page-head-actions">
+      <button type="button" class="btn btn-secondary" id="summarizeAllBtn">🤖 สรุปรายการด้วย AI</button>
+    </div>
   </div>
-  <div class="text-secondary" style="margin-bottom:16px;">รายการคำขอเรียกรถซาเล้งทั้งหมด (real-time จาก Firestore)</div>
 
   <button type="button" class="unread-summary" id="unreadSummary" hidden></button>
 
-  <div class="chip-row" id="filterRow">
-    <div class="chip" data-status="pending_admin_review">รอตรวจสอบ</div>
-    <div class="chip" data-status="open_for_saleng">เปิดให้สาเล้งรับงาน</div>
-    <div class="chip" data-status="confirmed">ยืนยันแล้ว</div>
-    <div class="chip" data-status="cancelled">ยกเลิกแล้ว</div>
-    <div class="chip" data-status="">ทั้งหมด</div>
+  <div class="chip-row" id="filterRow" role="tablist" aria-label="กรองตามสถานะ">
+    <button type="button" class="chip" role="tab" data-status="pending_admin_review">รอตรวจสอบ<span class="chip-count" data-count="pending_admin_review"></span></button>
+    <button type="button" class="chip" role="tab" data-status="open_for_saleng">เปิดให้สาเล้งรับงาน<span class="chip-count" data-count="open_for_saleng"></span></button>
+    <button type="button" class="chip" role="tab" data-status="confirmed">ยืนยันแล้ว<span class="chip-count" data-count="confirmed"></span></button>
+    <button type="button" class="chip" role="tab" data-status="cancelled">ยกเลิกแล้ว<span class="chip-count" data-count="cancelled"></span></button>
+    <button type="button" class="chip" role="tab" data-status="">ทั้งหมด<span class="chip-count" data-count=""></span></button>
   </div>
 
-  <div class="ai-summarize-all">
-    <button type="button" class="btn btn-secondary" id="summarizeAllBtn">🤖 สรุปรายการที่แสดงอยู่</button>
-    <div class="ai-output" id="summarizeAllResult" hidden></div>
-  </div>
+  <div class="ai-output ai-summary-all-output" id="summarizeAllResult" hidden></div>
 
   <div id="requestList">
     <div class="empty-note">กำลังโหลด...</div>
@@ -87,6 +91,7 @@
 <script src="../../ai-helpers.js"></script>
 <script src="../../notify-helpers.js"></script>
 <script src="../../image-helpers.js"></script>
+<script src="../admin-shell.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
